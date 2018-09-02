@@ -118,7 +118,7 @@ public class DoubleRange extends AbstractRange {
     @Override
     public String toString() {
         StringBuilder B = new StringBuilder();
-        B.append(" Cardinality: " + super.getHowMany());
+        B.append("Cardinality: " + super.getHowMany());
         B.append(" Min: ");
         if (hasSpecialMinStatus()) {
             B.append(getMinSpecialStatus());

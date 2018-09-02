@@ -16,23 +16,29 @@ limitations under the License.
 package edu.utexas.cs.tamerProject.agents.tamer;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 import org.rlcommunity.rlglue.codec.AgentInterface;
 import org.rlcommunity.rlglue.codec.types.Action;
 import org.rlcommunity.rlglue.codec.types.Observation;
 import org.rlcommunity.rlglue.codec.util.AgentLoader;
 
-import rlVizLib.general.ParameterHolder;
-import rlVizLib.general.hasVersionDetails;
-
 import edu.utexas.cs.tamerProject.actSelect.ActionSelect;
 import edu.utexas.cs.tamerProject.agents.CreditAssignParamVec;
 import edu.utexas.cs.tamerProject.agents.GeneralAgent;
 import edu.utexas.cs.tamerProject.agents.HLearner;
-import edu.utexas.cs.tamerProject.modeling.Sample;
+import edu.utexas.cs.tamerProject.agents.mtamer.trackable.TableTrackable;
+import edu.utexas.cs.tamerProject.logger.Log;
 import edu.utexas.cs.tamerProject.modeling.SampleWithObsAct;
 import edu.utexas.cs.tamerProject.trainInterface.TrainerListener;
 import edu.utexas.cs.tamerProject.utils.Stopwatch;
+import rlVizLib.general.ParameterHolder;
+import rlVizLib.general.hasVersionDetails;
 
 
 /**
@@ -42,13 +48,14 @@ import edu.utexas.cs.tamerProject.utils.Stopwatch;
  * @author bradknox
  *
  */
-public class TamerAgent extends GeneralAgent implements AgentInterface {
+public class TamerAgent extends GeneralAgent implements AgentInterface, TableTrackable {
 
 	public HLearner hLearner;
 	protected double lastStepStartTime;
 
 	public TrainerListener trainerListener;
-
+	public JTable histTable;
+	
 	/*
 	 * Time of agent pause at end of episode in milliseconds, where
 	 * agent simply waits to finish agent_end(), which TinyGlueExtended
@@ -59,13 +66,15 @@ public class TamerAgent extends GeneralAgent implements AgentInterface {
 	 *  instead through its static variable PAUSE_DUR_AFTER_EP. ****
 	 */
 	public int EP_END_PAUSE = 0; //2000; /
-	private SampleWithObsAct[] lastLearningSamples;
+	protected SampleWithObsAct[] lastLearningSamples;
 	public static boolean verifyObsFitsEnvDesc = true;
 	
 	
 	public SampleWithObsAct[] getLastLearningSamples(){return this.lastLearningSamples;}
     
-    
+    private static final Log log = new Log(//edit these values as desired (class, Level, less trace information)
+			TamerAgent.class, Level.INFO, Log.Simplicity.HIGH);//basic logging functionality
+	
 	// Called when the environment is loaded (when "Load Experiment" is clicked in RLViz)
     public void agent_init(String taskSpec) {
     	GeneralAgent.agent_init(taskSpec, this);
@@ -80,7 +89,7 @@ public class TamerAgent extends GeneralAgent implements AgentInterface {
 		
 		//// INITIALIZE TAMER
 		this.hLearner = new HLearner(this.model, credAssignParams);
-		
+		//System.out.println(this.params.selectionMethod +"\r" +this.params.selectionParams.toString() );
 		this.actSelector = new ActionSelect(this.model, this.params.selectionMethod, 
 											this.params.selectionParams, this.currObsAndAct.getAct().duplicate());
 
@@ -125,15 +134,16 @@ public class TamerAgent extends GeneralAgent implements AgentInterface {
     }
     
     public Action agent_step(double r, Observation o, double startTime, Action predeterminedAct, Action tieBreakAction) {
-    	System.out.println("\n-----------------Tamer step---------------\n");
+    	log.log(Level.INFO,"\n-----------------Tamer step---------------");
+    	log.log(Level.FINER,"\n");
     	//System.out.println("Training? " + this.inTrainSess);
-    	System.out.println("Tamer obs: " + Arrays.toString(o.intArray));
+    	log.log(Level.FINE,"TAMER obs: " + Arrays.toString(o.intArray));
     	if (verifyObsFitsEnvDesc)
     		this.checkObs(o);
     	//System.out.println("rew list in TAMER: " + this.hRewList.toString());
     	this.stepStartTime = startTime;
 		this.stepStartHelper(r, o); // this.stepStartTime (set in stepStartHelper()) ends last step and starts new step
-		System.out.println("TAMER this.stepStartTime: " + String.format("%f", this.stepStartTime));
+		log.log(Level.FINE,"TAMER this.stepStartTime: " + String.format("%f", this.stepStartTime));
     	this.hLearner.recordTimeStepEnd(startTime);
 //    	if (this.stepsThisEp > 1)
 //    		System.out.println("Tamer feats for last obs-act: " + Arrays.toString(this.featGen.getFeats(o, this.lastObsAndAct.getAct())));
@@ -142,17 +152,18 @@ public class TamerAgent extends GeneralAgent implements AgentInterface {
     	 * PROCESS PREVIOUS TIME STEP
     	 */
 //		if (this.stepsThisEp == 2)
-			//System.out.println("Predicted human reward for last step in TAMER: " + this.getVal(this.lastObsAndAct));
+			//log.log(Level.INFO,"Predicted human reward for last step in TAMER: " + this.getVal(this.lastObsAndAct));
 		processPrevTimeStep(this.stepStartTime);
-		this.lastLearningSamples = this.hLearner.processSamples(startTime, inTrainSess);
+		this.lastLearningSamples = handlePrevSamples(startTime, inTrainSess);
+//		this.lastLearningSamples = this.hLearner.processSamples(startTime, inTrainSess);
 		
 		try{
 			for(SampleWithObsAct sample: this.lastLearningSamples){
-				System.out.println("Sample Value: " + sample.label);
-				System.out.println("Obs: " + Arrays.toString(sample.obs.intArray) + "Act: " + Arrays.toString(sample.act.intArray));
+				log.log(Level.INFO,"Sample Value: " + sample.label);
+				log.log(Level.FINE,"Obs: " + Arrays.toString(sample.obs.intArray) + "Act: " + Arrays.toString(sample.act.intArray));
 			}
 		}
-		catch(Exception e){}
+		catch(Exception e){e.printStackTrace();}
 		
 		/*
 		 *  GET ACTION
@@ -164,7 +175,7 @@ public class TamerAgent extends GeneralAgent implements AgentInterface {
 		}
     	
 //		if (this.stepsThisEp == 399)
-			System.out.println("TAMER act vals: " + Arrays.toString(this.model.getStateActOutputs(o, this.model.getPossActions(o))));
+			log.log(Level.FINER,"TAMER act vals: " + Arrays.toString(this.model.getStateActOutputs(o, this.model.getPossActions(o))));
 		
 		this.lastStepStartTime = this.stepStartTime;
 		//if (this.currObsAndAct.getAct().intArray.length > 0)
@@ -174,7 +185,9 @@ public class TamerAgent extends GeneralAgent implements AgentInterface {
 		this.stepEndHelper(r, o);
 		if (this.isTopLevelAgent) // If not top level, TamerAgent's chosen action might not be the actual action. This must be called by the primary class.
 			this.hLearner.recordTimeStepStart(o, this.currObsAndAct.getAct(), this.featGen, startTime);
-		
+		Map<String, Object> params = new HashMap<>();
+		params.put("episode reward", r);
+		this.updateHistory(params);
 		return this.currObsAndAct.getAct();
     }
 
@@ -192,8 +205,11 @@ public class TamerAgent extends GeneralAgent implements AgentInterface {
 
     
     
-    
-	protected void processPrevTimeStep(double borderTime){	
+    /**
+     * Processes rewards from a previous time step
+     */
+	protected void processPrevTimeStep(double borderTime){
+//		System.out.println("Efficiency: "+this.hRewThisStep);
 		if (inTrainSess) //// UPDATE
 			this.hLearner.processHRew(this.hRewThisStep);
 
@@ -201,10 +217,19 @@ public class TamerAgent extends GeneralAgent implements AgentInterface {
 			System.out.println("hRewThisStep: " + this.hRewThisStep.toString());
 	}
     
+	/**
+	 * Handles the samples created by processing the rewards from a previous time step
+	 */
+	protected SampleWithObsAct[] handlePrevSamples(double currTime, boolean inTrainSess)
+	{
+		SampleWithObsAct[] ret = this.hLearner.processSamples(currTime, inTrainSess);
+		//in subclasses, we can do other things here as well
+		return ret;
+	}
 
-    public void agent_cleanup() {
-        
-    }
+//    public void agent_cleanup() {
+//        
+//    }
 
 
 
@@ -234,7 +259,7 @@ public class TamerAgent extends GeneralAgent implements AgentInterface {
 	    }  
 	    
 		public void processPreInitArgs(String[] args) {
-			System.out.println("\n[------Tamer process pre-init args------] " + Arrays.toString(args));
+			log.log(Level.FINE,"\n[------Tamer process pre-init args------] " + Arrays.toString(args));
 			super.processPreInitArgs(args);
 			for (int i = 0; i < args.length; i++) {
 	    		String argType = args[i];
@@ -301,16 +326,16 @@ public class TamerAgent extends GeneralAgent implements AgentInterface {
 			super.receiveKeyInput(c);
 			//System.out.println("TamerAgent receives key: " + c);
 			if (c == '/') {
-				this.addHRew(1.0);
+				this.addHRew(Feedback.GOOD);
 			}
 			else if (c == 'z') {
-				this.addHRew(-1.0);
+				this.addHRew(Feedback.BAD);
 			}
 			else if (c == '?') {
-				this.addHRew(10.0);
+				this.addHRew(Feedback.EXCELLENT);
 			}
 			else if (c == 'Z') {
-				this.addHRew(-10.0);
+				this.addHRew(Feedback.AWFUL);
 			}
 			else if (c == ' ' && this.allowUserToggledTraining) {
 				this.toggleInTrainSess();
@@ -336,10 +361,32 @@ public class TamerAgent extends GeneralAgent implements AgentInterface {
 	        rlVizLib.utilities.UtilityShop.setVersionDetails(p, new DetailsProvider());
 	        return p;
 	    }
-	    
-	    
-	
-	
+
+		public void setHistoryTracker(JTable table) 
+		{
+			this.histTable = table;
+		}
+
+		public void updateHistory(Map<String, Object> params)
+		{
+			if(params == null) params = new HashMap<>();
+			double r = params.containsKey("episode reward") ? (double) params.get("episode reward") : 0;
+			if(histTable != null)
+			{
+				assert histTable.getModel() instanceof DefaultTableModel : "History Table created with incompatible model (needs support)!";
+				DefaultTableModel model = (DefaultTableModel) histTable.getModel();
+				model.addRow(new Object[] { this.currEpNum, this.unique, 0.0, 0.0, r });
+			}
+		}
+}
+
+class Feedback
+{
+	public static final int
+		BAD = -1,
+		GOOD = 1,
+		AWFUL = -10,
+		EXCELLENT = 10;
 }
 
 

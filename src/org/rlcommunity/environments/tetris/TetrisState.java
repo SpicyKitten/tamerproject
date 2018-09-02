@@ -43,6 +43,7 @@ public class TetrisState {
     
     public boolean blockMobile = true;
     public int currentBlockId;/*which block we're using in the block table*/
+    public int currentBlockColorId;//not in the observation, TODO?
 
     public int currentRotation = 0;
     public int currentX;/* where the falling block is currently*/
@@ -60,7 +61,7 @@ public class TetrisState {
 
     //	/*Hold all the possible bricks that can fall*/
     Vector<TetrisPiece> possibleBlocks = new Vector<TetrisPiece>();
-
+    public static final int possibleColors = 3;
 
     public TetrisState() {
         possibleBlocks.add(TetrisPiece.makeLine());
@@ -89,7 +90,7 @@ public class TetrisState {
     public Observation get_observation() {
         //eget observation with only the state space
         //try {
-            Observation o = new Observation(worldState.length + 7, 0);
+            Observation o = new Observation(worldState.length + 8, 0);
             for (int i = 0; i < worldState.length; i++) {
                 o.intArray[i] = worldState[i];
             }
@@ -101,6 +102,7 @@ public class TetrisState {
 			o.intArray[worldState.length + 4] = this.currentY;
 			o.intArray[worldState.length + 5] = this.worldWidth;
 			o.intArray[worldState.length + 6] = this.worldHeight;
+			o.intArray[worldState.length + 7] = this.currentBlockColorId;
 
             return o;
 
@@ -143,7 +145,7 @@ public class TetrisState {
 						previousBlock[cellIndex] = linearIndex;
 						cellIndex++;
 					}
-                    game_world[linearIndex] = currentBlockId + 1 + hollowAddition; // add # of tetromino types to type ID
+                    game_world[linearIndex] = currentBlockColorId + 1 + hollowAddition; // add # of tetromino types to type ID
 					
                 }
             }
@@ -416,6 +418,7 @@ public class TetrisState {
         blockMobile = true;
 
         currentBlockId = randomGenerator.nextInt(possibleBlocks.size());
+        currentBlockColorId = randomGenerator.nextInt(possibleColors/**Red, Green, Blue, see TetrisBlocksComponent**/);
 
         currentRotation = 0;
         currentX = (worldWidth / 2) - 2;
@@ -455,7 +458,7 @@ public class TetrisState {
         //4 lines == 8
         score += java.lang.Math.pow(2.0d, numRowsCleared-1);
     }
-
+    
     /**
      * Check if a row has been completed at height y.
      * Short circuits, returns false whenever we hit an unfilled spot.
@@ -559,6 +562,7 @@ public class TetrisState {
     public TetrisState(TetrisState stateToCopy) {
         this.blockMobile = stateToCopy.blockMobile;
         this.currentBlockId = stateToCopy.currentBlockId;
+        this.currentBlockColorId = stateToCopy.currentBlockColorId;
         this.currentRotation = stateToCopy.currentRotation;
         this.currentX = stateToCopy.currentX;
         this.currentY = stateToCopy.currentY;

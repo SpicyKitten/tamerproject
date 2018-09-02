@@ -52,6 +52,7 @@ public class TetrisVisualizer extends AbstractVisualizer {
     DynamicControlTarget theControlTarget = null;
     SelfUpdatingVizComponent theBlockVisualizer;
     SelfUpdatingVizComponent theTetrlaisScoreViz;
+//    SelfUpdatingVizComponent theMoralityChangeViz;
 
     public TetrisVisualizer(TinyGlue theGlueState, DynamicControlTarget theControlTarget) {
         super();
@@ -60,9 +61,13 @@ public class TetrisVisualizer extends AbstractVisualizer {
         this.theControlTarget = theControlTarget;
         theBlockVisualizer = new TetrisBlocksComponent(this);
         theTetrlaisScoreViz = new TetrisScoreComponent(this);
+//        theMoralityChangeViz = new TetrisScoreComponent(this);
 
-        addVizComponentAtPositionWithSize(theBlockVisualizer, 0, .1, 1.0, .87);
+//        addVizComponentAtPositionWithSize(theTetrlaisScoreViz, 0, 0, 1.0, .3);
         addVizComponentAtPositionWithSize(theTetrlaisScoreViz, 0, 0, 1.0, 0.3);
+//        addVizComponentAtPositionWithSize(theMoralityChangeViz, 0, .07, 1.0, 0.3);
+//        addVizComponentAtPositionWithSize(theBlockVisualizer, 0, .16, 1.0, .845);
+        addVizComponentAtPositionWithSize(theBlockVisualizer, 0, .1, 1.0, .87);
 
         addDesiredExtras();
     }
@@ -190,6 +195,7 @@ public class TetrisVisualizer extends AbstractVisualizer {
     public void showFeedback(int feedback){
         ((TetrisBlocksComponent)theBlockVisualizer).setCurrFeedback(feedback);
         ((TetrisScoreComponent)theTetrlaisScoreViz).refresh();
+//        ((TetrisScoreComponent)theMoralityChangeViz).refresh();
         try{
             //do what you want to do before sleeping
             Thread.currentThread().sleep(100);//sleep for 100 ms
@@ -200,6 +206,7 @@ public class TetrisVisualizer extends AbstractVisualizer {
             System.out.println("Interrupted");
         }
         ((TetrisScoreComponent)theTetrlaisScoreViz).refresh();
+//        ((TetrisScoreComponent)theMoralityChangeViz).refresh();
     }
 
     public String getName() {

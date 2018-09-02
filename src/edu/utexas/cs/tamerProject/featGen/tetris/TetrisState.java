@@ -41,6 +41,7 @@ public class TetrisState {
     
     public boolean blockMobile = true;
     public int currentBlockId;/*which block we're using in the block table*/
+    public int currentBlockColorId;//not in the observation, TODO?
 
     public int currentRotation = 0;
     public int currentX;/* where the falling block is currently*/
@@ -57,8 +58,8 @@ public class TetrisState {
     public int[] worldState;/*what the world looks like without the current block*/
 
     //	/*Hold all the possible bricks that can fall*/
-    Vector<TetrisPiece> possibleBlocks = new Vector<TetrisPiece>();
-
+    public Vector<TetrisPiece> possibleBlocks = new Vector<TetrisPiece>();
+    public static final int possibleColors = 3;
 
     public TetrisState() {
         possibleBlocks.add(TetrisPiece.makeLine());
@@ -99,7 +100,7 @@ public class TetrisState {
                 if (worldObservation[i] == 0) {
                     o.intArray[i] = 0;
                 } else {
-                    o.intArray[i] = 1;
+                    o.intArray[i] = worldObservation[i];
                 }
             }
             for (int j = 0; j < possibleBlocks.size(); ++j) {
@@ -150,7 +151,7 @@ public class TetrisState {
 						previousBlock[cellIndex] = linearIndex;
 						cellIndex++;
 					}
-                    game_world[linearIndex] = currentBlockId + 1 + hollowAddition; // add # of tetromino types to type ID
+                    game_world[linearIndex] = currentBlockColorId + 1 + hollowAddition; // add # of tetromino types to type ID
 					
                 }
             }
@@ -281,7 +282,7 @@ public class TetrisState {
      * @param y
      * @return
      */
-    int calculateLinearArrayPosition(int x, int y) {
+    public int calculateLinearArrayPosition(int x, int y) {
         int returnValue=y * worldWidth + x;
         assert returnValue >= 0 : " "+y+" * "+worldWidth+" + "+x+" was less than 0.";
         return returnValue;
@@ -457,7 +458,7 @@ public class TetrisState {
         blockMobile = true;
 
         currentBlockId = randomGenerator.nextInt(possibleBlocks.size());
-
+        currentBlockColorId = randomGenerator.nextInt(possibleColors/**Red, Green, Blue, see TetrisBlocksComponent**/);
         currentRotation = 0;
         currentX = (worldWidth / 2) - 2;
         currentY = -4;
@@ -509,7 +510,46 @@ public class TetrisState {
         //2 lines == 2
         //3 lines == 4
         //4 lines == 8
-        score += java.lang.Math.pow(2.0d, numRowsCleared-1);
+        score += perAgentScoreFunction(numRowsCleared);
+    }
+    
+    int perAgentScoreFunction(int linesCleared) {
+    	int sum = 0;
+    	int agent = getCurrAgent();
+    	switch(linesCleared)
+    	{
+    	case 4: sum += 4;//8
+    	case 3: sum += 2;//4
+    	case 2: sum += 1;//2
+    	case 1: sum += 1;//1
+    	default: ;
+    	}
+    	//TODO: hashmap
+    	for(int i = 0; i < worldHeight; ++i)
+    	{
+    		for(int j = 0; j < worldWidth; ++j)
+    		{
+    			int loc = calculateLinearArrayPosition(j, i);
+    			int loc_plus_1_x = calculateLinearArrayPosition(j+1, i);
+    			int loc_plus_1_y = calculateLinearArrayPosition(j, i+1);
+    			//TODO: check if loc and adjacents are matching to the table and give +score if so
+    		}
+    	}
+    	return sum;
+    }
+    
+    //TODO: get which agent it is in the upper invocations
+    //depends on how the transition from Tetris death to Tetris new game is implemented
+    //for now, just call it once per each step, temp functionality
+    private int current_agent = -1;
+    private int currentSteps = -1;
+    int getCurrAgent() {
+    	int numAgents = 2;
+    	int numStepsPerAgent = 1;
+    	currentSteps = (currentSteps + 1) % numStepsPerAgent;
+    	if(currentSteps == 0)
+    		current_agent = (current_agent + 1) % numAgents; 
+    	return current_agent;
     }
 
     /**
@@ -646,6 +686,7 @@ public class TetrisState {
     public TetrisState(TetrisState stateToCopy) {
         this.blockMobile = stateToCopy.blockMobile;
         this.currentBlockId = stateToCopy.currentBlockId;
+        this.currentBlockColorId = stateToCopy.currentBlockColorId;
         this.currentRotation = stateToCopy.currentRotation;
         this.currentX = stateToCopy.currentX;
         this.currentY = stateToCopy.currentY;
@@ -653,6 +694,8 @@ public class TetrisState {
         this.is_game_over = stateToCopy.is_game_over;
         this.worldWidth = stateToCopy.worldWidth;
         this.worldHeight = stateToCopy.worldHeight;
+        this.current_agent = stateToCopy.current_agent;
+        this.currentSteps = stateToCopy.currentSteps;
 
         this.worldState = new int[stateToCopy.worldState.length];
         for (int i = 0; i < this.worldState.length; i++) {

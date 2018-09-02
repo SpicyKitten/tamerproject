@@ -23,10 +23,13 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.util.Observable;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
-import java.util.Observable;
+import java.util.logging.Level;
+
+import edu.utexas.cs.tamerProject.logger.Log;
 
 public abstract class AbstractVisualizer extends Observable implements ImageAggregator {
 
@@ -40,9 +43,11 @@ public abstract class AbstractVisualizer extends Observable implements ImageAggr
     volatile boolean currentlyRunning = false;
 
 	public boolean verbose = false;
-
+	private static final Log log = new Log(//edit these values as desired (class, Level, less trace information)
+			AbstractVisualizer.class, Level.FINE, Log.Simplicity.HIGH);//basic logging functionality
+	
     public void setParentPanel(VisualizerPanelInterface parentPanel) {
-		System.out.println("Setting parentPanel to " + parentPanel.getClass().getSimpleName());
+		log.log(Level.INFO,"Setting parentPanel to " + parentPanel.getClass().getSimpleName());
         this.parentPanel = parentPanel;
     }
 

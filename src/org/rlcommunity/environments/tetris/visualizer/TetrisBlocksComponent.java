@@ -127,27 +127,36 @@ public class TetrisBlocksComponent implements SelfUpdatingVizComponent, Observer
 			double noCol = 0.5;
 			if(thisBlockColor!=0){
                                 switch(thisBlockColor){
-                          case 1: // line
-                              color = makeColor(noCol, noCol, noCol); //
-                              break;
-                          case 2: // square
-                              color = makeColor(noCol, noCol, noCol); //
-                              break;
-                          case 3: // triton
-                              color = makeColor(noCol, noCol, noCol); //
-                              break;
-                          case 4: // z
-                              color = makeColor(0.3, 0.05, 0.05); //
-                              break;
-                          case 5: // s
-                              color =  makeColor(0.0, 0.3, 0.3); //
-                              break;
-                          case 6: // mirrored L
-                              color = makeColor(0.0, 0.3, 0.3); //
-                              break;
-                          case 7: // L
-                              color = makeColor(0.3, 0.05, 0.05); //
-                              break;
+                                case 1: //red
+                                	color = makeColor(0.5, 0.1, 0.1);
+                                	break;
+                                case 2: //green
+                                	color = makeColor(0.1, 0.5, 0.1);
+                                	break;
+                                case 3: //blue
+                                	color = makeColor(0.1, 0.1, 0.5);
+                                	break;
+//                          case 1: // line
+//                              color = makeColor(noCol, noCol, noCol); //
+//                              break;
+//                          case 2: // square
+//                              color = makeColor(noCol, noCol, noCol); //
+//                              break;
+//                          case 3: // triton
+//                              color = makeColor(noCol, noCol, noCol); //
+//                              break;
+//                          case 4: // z
+//                              color = makeColor(0.7, 0.05, 0.05); //
+//                              break;
+//                          case 5: // s
+//                              color =  makeColor(0.0, 0.7, 0.7); //
+//                              break;
+//                          case 6: // mirrored L
+//                              color = makeColor(0.0, 0.7, 0.7); //
+//                              break;
+//                          case 7: // L
+//                              color = makeColor(0.7, 0.05, 0.05); //
+//                              break;
                               
 //                          case 1: // line
 //                              color = makeColor(0.5, 0.3, 0.1); //

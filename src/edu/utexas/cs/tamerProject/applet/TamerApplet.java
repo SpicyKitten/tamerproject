@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.Observable;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
 
 import org.rlcommunity.environments.acrobot.Acrobot;
 import org.rlcommunity.environments.cartpole.CartPole;
@@ -13,12 +14,12 @@ import org.rlcommunity.rlglue.codec.EnvironmentInterface;
 
 import edu.utexas.cs.tamerProject.agents.GeneralAgent;
 import edu.utexas.cs.tamerProject.agents.imitation.ImitationAgent;
+import edu.utexas.cs.tamerProject.logger.Log;
 import edu.utexas.cs.tamerProject.agents.sarsaLambda.SarsaLambdaAgent;
 import edu.utexas.cs.tamerProject.agents.specialty.ExtActionAgentWrap;
 import edu.utexas.cs.tamerProject.agents.tamer.TamerAgent;
 import edu.utexas.cs.tamerProject.agents.tamerrl.TamerRLAgent;
 import edu.utexas.cs.tamerProject.environments.loopmaze.LoopMaze;
-import edu.utexas.cs.tamerProject.environments.loopmaze.LoopMazeSecretPath;
 
 /**
  * TamerApplet extends RLApplet's functionality (as does TamerPanel for RLPanel)
@@ -52,6 +53,9 @@ public class TamerApplet extends RLApplet {
 	String agentType = null;
 	String lastTask = null;
 	
+	private static final Log log = new Log(//edit these values as desired (class, Level, less trace information)
+		TamerApplet.class, Level.FINE, Log.Simplicity.HIGH);//basic logging functionality
+
 	public void initPanel() {
 
 		String isHITStr = null;
@@ -156,7 +160,7 @@ public class TamerApplet extends RLApplet {
 
 		}
 
-		System.out.println("agent: " + agent);
+		log.log(Level.INFO,"agent: " + agent);
 
 		if (trainControlStr != null)
 			agent.setAllowUserToggledTraining(Boolean
@@ -194,8 +198,8 @@ public class TamerApplet extends RLApplet {
 			agent.setRecordLog(false);
 			agent.setRecordRew(false);
 		}
-		System.out.println("agent.getRecordLog(): " + agent.getRecordLog());
-		System.out.println("agent.getRecordRew(): " + agent.getRecordRew());
+		log.log(Level.FINE,"agent.getRecordLog(): " + agent.getRecordLog());
+		log.log(Level.FINE,"agent.getRecordRew(): " + agent.getRecordRew());
 
 		preExpPanel = new PreExpPanel();
 		preExpPanel.setSize(this.getWidth(), this.getHeight());
@@ -207,7 +211,7 @@ public class TamerApplet extends RLApplet {
 			public void run() {
 				Thread.currentThread().setName("StartCheckTimer-TamerApplet");
 				if (!TamerApplet.isHIT || readyToStart()) {
-					System.out.println("Version of TamerApplet: " + this.getClass().getSimpleName());
+					log.log(Level.INFO,"Version of TamerApplet: " + this.getClass().getSimpleName());
 					prepForStartTask();
 					startTask();
 				}
@@ -215,7 +219,9 @@ public class TamerApplet extends RLApplet {
 			}
 		}, new Date(), (long) 200);
 
-		System.out.println("\n\n\nEnd of TamerApplet.initPanel()\n\n\n");
+		log.log(Level.FINEST,"\n\n");
+		log.log(Level.FINE,"\nEnd of TamerApplet.initPanel()\n");
+		log.log(Level.FINEST,"\n\n");
 	}
 
 	protected void prepForStartTask() {
@@ -240,7 +246,7 @@ public class TamerApplet extends RLApplet {
 	}
 
 	protected void startTask() {
-		System.err.println("TamerApplet.startTask()");
+		log.log(Level.FINE,"TamerApplet.startTask()");
 		rlPanel.runLocal.startExp();
 		if (TamerApplet.isHIT
 				&& !((GeneralAgent) rlPanel.agent).getInTrainSess()

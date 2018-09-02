@@ -1,7 +1,6 @@
 package edu.utexas.cs.tamerProject.applet;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
@@ -14,7 +13,7 @@ import java.awt.image.BufferedImage;
 import java.util.Date;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Vector;
+import java.util.logging.Level;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -23,13 +22,11 @@ import javax.swing.Timer;
 import org.rlcommunity.rlglue.codec.AgentInterface;
 import org.rlcommunity.rlglue.codec.EnvironmentInterface;
 import org.rlcommunity.rlviz.app.VisualizerFactory;
-import org.rlcommunity.rlviz.app.VisualizerPanel;
-import org.rlcommunity.rlviz.app.frames.VisualizerVizFrame;
 
+import edu.utexas.cs.tamerProject.logger.Log;
 import rlVizLib.messaging.environment.EnvVisualizerNameRequest;
 import rlVizLib.messaging.environment.EnvVisualizerNameResponse;
 import rlVizLib.visualization.AbstractVisualizer;
-import rlVizLib.visualization.RenderObject;
 import rlVizLib.visualization.VisualizerPanelInterface;
 
 
@@ -62,7 +59,9 @@ public class RLPanel extends JPanel
 	
 	public static boolean enableSpeedControls = true;
 	public static boolean enableSingleStepControl = true;
-		
+	
+	private static final Log log = new Log(//edit these values as desired (class, Level, less trace information)
+			RLPanel.class, Level.FINE, Log.Simplicity.HIGH);//basic logging functionality
 	
 	public void init(AgentInterface agent, EnvironmentInterface env) {	
 		setFocusable(true);
@@ -72,13 +71,13 @@ public class RLPanel extends JPanel
 		addMouseListener(this);
 		//setDoubleBuffered(true);
 		setBackground(Color.white);	
-		System.out.println("RLPanel size after in RLPanel.init(): " + this.getWidth() + ", " + this.getHeight());
+		log.log(Level.FINER,"RLPanel size after in RLPanel.init(): " + this.getWidth() + ", " + this.getHeight());
 		
 		runLocal = new RunLocalExperiment();
 		runLocal.theAgent = agent;
 		runLocal.theEnvironment = env;
 		runLocal.init();
-		System.out.println("runLocal: " + runLocal);
+		log.log(Level.FINE,"runLocal: " + runLocal);
 		this.agent = runLocal.theAgent;
 		this.env = runLocal.theEnvironment;
         EnvVisualizerNameResponse theNameResponse = EnvVisualizerNameRequest.Execute();
@@ -260,7 +259,7 @@ public class RLPanel extends JPanel
 	
 	
 	
-	public void keyPressed( KeyEvent e ) {
+	public void keyTyped( KeyEvent e ) {
 		//System.out.println("pressed in rlpanel: " + e.getKeyChar());
 		boolean stepDurChange = false;
 		if (RLPanel.enableSpeedControls 
@@ -295,7 +294,7 @@ public class RLPanel extends JPanel
 		
 	}
 	public void keyReleased( KeyEvent e ) {}
-	public void keyTyped( KeyEvent e ) {}
+	public void keyPressed( KeyEvent e ) {}
 
 	
 	public void mouseEntered( MouseEvent e ) { }

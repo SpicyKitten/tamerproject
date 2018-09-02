@@ -102,11 +102,12 @@ public class TetrisTamerExpHelper extends GeneralExperiment {
 		agent.coreAgent.enableGUI = false;
 		((TamerAgent)agent.coreAgent).EP_END_PAUSE = 0;
 		
-		agent.params = Params.getParams(agent.getClass().getName(), agent.envName);
-		agent.coreAgent.params = Params.getParams(agent.coreAgent.getClass().getName(), agent.envName);
-
-		
 		agent.initParams(agent.envName);
+		agent.coreAgent.initParams(agent.envName);
+//		agent.params = Params.getParams(agent.getClass().getName(), agent.envName);
+//		agent.coreAgent.params = Params.getParams(agent.coreAgent.getClass().getName(), agent.envName);
+		System.out.println("Tetris Agent Parameters:" + agent.params.toOneLineStr());
+		
 		setTamerAgentParams((TamerAgent)agent.coreAgent); // should be done before processPreInitArgs(), which might intentionally override some assignments done by this call
 		agent.processPreInitArgs(args);
 		

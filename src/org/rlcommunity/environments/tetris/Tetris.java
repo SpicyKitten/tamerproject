@@ -221,6 +221,8 @@ public class Tetris extends EnvironmentBase implements HasAVisualizerInterface, 
         //Then width
         theTaskSpecObject.addDiscreteObservation(new IntRange(gameState.getWidth(), gameState.getWidth()));
 
+        theTaskSpecObject.addDiscreteObservation(new IntRange(0, TetrisState.possibleColors));
+        
         theTaskSpecObject.addDiscreteAction(new IntRange(0, 4)); // FALL action has been removed
         //This is actually a lie... the rewards aren't in that range.
         theTaskSpecObject.setRewardRange(new DoubleRange(0, 8.0d));

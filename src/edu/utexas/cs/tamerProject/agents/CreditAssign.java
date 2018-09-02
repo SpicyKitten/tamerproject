@@ -4,13 +4,13 @@ package edu.utexas.cs.tamerProject.agents;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.logging.Level;
 
 import org.rlcommunity.rlglue.codec.types.Action;
 import org.rlcommunity.rlglue.codec.types.Observation;
 
-import edu.utexas.cs.tamerProject.agents.CreditAssignParamVec;
+import edu.utexas.cs.tamerProject.logger.Log;
 import edu.utexas.cs.tamerProject.featGen.FeatGenerator;
-import edu.utexas.cs.tamerProject.modeling.Sample;
 import edu.utexas.cs.tamerProject.modeling.SampleWithObsAct;
 
 
@@ -51,7 +51,10 @@ public class CreditAssign{
 			return s;
 		}
 	}
-	 
+	
+	private static final Log log = new Log(//edit these values as desired (class, Level, less trace information)
+			CreditAssign.class, Level.INFO, Log.Simplicity.HIGH);//basic logging functionality
+	
 	public static final Random randGenerator = new Random();
 	
 	ArrayList<TimeStepForCred> timeStepsInWindow;
@@ -79,7 +82,7 @@ public class CreditAssign{
 	
 	
 	public CreditAssign(CreditAssignParamVec params){
-		System.out.println("Creating CreditAssign object with params: " + params);
+		log.log(Level.FINE,"Creating CreditAssign object with params: " + params);
 		this.distClass = params.distClass;
 		this.windowStart = params.creditDelay;
 		this.windowEnd = params.windowSize + this.windowStart;
@@ -129,6 +132,10 @@ public class CreditAssign{
 		
 		int newSampleUnique = delayWtedIndivRew ? -1 : this.totalTimeSteps + UNIQUE_START; 
 		this.activeSamples.add(new SampleWithObsAct(feats, 1.0, newSampleUnique, o, a));
+//		System.out.println(this.timeStepsInWindow);
+//		if(this.activeSamples.size() == 2)
+//		System.out.println(Arrays.toString(
+//				new double[] {activeSamples.get(0).label, activeSamples.get(1).label}));
 		this.totalTimeSteps++;
 		//System.out.println("this.activeSamples.size(): " + this.activeSamples.size());
 	}

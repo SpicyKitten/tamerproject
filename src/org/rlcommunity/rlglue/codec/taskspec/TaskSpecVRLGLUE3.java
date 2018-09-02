@@ -352,6 +352,7 @@ public class TaskSpecVRLGLUE3 extends TaskSpecDelegate {
         sampleTSO.setRewardRange(new DoubleRange(-5, 5));
         sampleTSO.setExtra("some other stuff goes here");
         System.out.println(sampleTSO.toTaskSpec());
+        System.out.println(sampleTSO.toString());
         assert (sampleTSO.toTaskSpec().equals(new TaskSpecVRLGLUE3(sampleTSO.toTaskSpec()).toTaskSpec()));
         assert (theTaskSpec.toTaskSpec().equals(sampleTSO.toTaskSpec()));
     }
@@ -377,12 +378,12 @@ public class TaskSpecVRLGLUE3 extends TaskSpecDelegate {
 
         SB.append("Int Act\n");
         for (IntRange intRange : intActions) {
-            System.out.print(intRange);
+            SB.append(intRange);
         }
         SB.append("\n");
         SB.append("double act\n");
         for (DoubleRange doubleRange : doubleActions) {
-            System.out.print(doubleRange);
+            SB.append(doubleRange);
         }
         SB.append("\n");
         SB.append("Char act: " + numActChars + "\n");

@@ -2,9 +2,11 @@ package edu.utexas.cs.tamerProject.params;
 	
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.logging.Level;
 
 import org.rlcommunity.rlglue.codec.types.Action;
 
+import edu.utexas.cs.tamerProject.logger.Log;
 import edu.utexas.cs.tamerProject.envModels.EnvTransModel;
 import edu.utexas.cs.tamerProject.envModels.rewModels.MountainCarRewModel;
 import edu.utexas.cs.tamerProject.envModels.transModels.CartPoleTransModel;
@@ -36,10 +38,16 @@ public class Params{
 	 * evidence for why a separate file is preferable.)
 	 */
 	
+	//// Logger
+	private static final Log log = new Log(//edit these values as desired (class, Level, less trace information)
+			Params.class, Level.FINE, Log.Simplicity.HIGH);//basic logging functionality
+	
     //// FeatGenerator params
     public String featClass = "None";
 	public HashMap<String,String> featGenParams = new HashMap<String,String>();
-    
+	
+	//// Moral FeatGenerator params
+    public String moralFeatClass = "None"; // for use in agents learning morality
 	
 	//// RegressionModel params
 	public String modelClass = "None";
@@ -97,7 +105,7 @@ public class Params{
 	}
 	
 	public static Params getParams(String agentClassName, String envName){
-		System.out.println("***in getParams(), agentClassName: " + agentClassName);
+		log.log(Level.FINE,"***in getParams(), agentClassName: " + agentClassName);
 		Params params = new Params();
 		
 		if (envName.equals("Mountain-Car")){
@@ -168,6 +176,7 @@ public class Params{
 				params.featClass = "FeatGen_Tetris";
 				params.modelClass =  "IncGDLinearModel"; 
 				params.stepSize = 0.000005; // 0.02;
+				params.moralFeatClass = "MoralFeatGen_Tetris";
 			}
 			else if (envName.equals("Acrobot")){
 				;
@@ -378,7 +387,7 @@ public class Params{
 				result.append(field.get(this));
 			} 
 			catch (IllegalAccessException ex) {
-				System.out.println(ex);
+				System.err.println(ex);
 			}
 //			result.append(newLine);
 		}

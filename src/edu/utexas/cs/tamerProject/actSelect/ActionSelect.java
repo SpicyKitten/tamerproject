@@ -2,8 +2,15 @@ package edu.utexas.cs.tamerProject.actSelect;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import org.rlcommunity.rlglue.codec.types.Action;
 import org.rlcommunity.rlglue.codec.types.Observation;
@@ -11,6 +18,7 @@ import org.rlcommunity.rlglue.codec.types.Observation;
 import edu.utexas.cs.tamerProject.agents.tamerrl.HInfluence;
 import edu.utexas.cs.tamerProject.envModels.EnvTransModel;
 import edu.utexas.cs.tamerProject.featGen.FeatGenerator;
+import edu.utexas.cs.tamerProject.logger.Log;
 import edu.utexas.cs.tamerProject.modeling.CombinationModel;
 import edu.utexas.cs.tamerProject.modeling.templates.ObsActModel;
 import edu.utexas.cs.tamerProject.modeling.templates.RegressionModel;
@@ -29,6 +37,8 @@ public class ActionSelect{
 	public String selectionMethod = "greedy";
 	//private Action baseAction;
 	private HashMap<String,String> selectionParams;
+	private static final Log log = new Log(//edit these values as desired (class, Level, less trace information)
+			ActionSelect.class, Level.FINE, Log.Simplicity.HIGH);//basic logging functionality
 	
 	/**
 	 * valFcnModel is a time-independent value function (as in RL) only if exponential 
@@ -51,6 +61,8 @@ public class ActionSelect{
 	private static int greedyLeafPathLength = 0;
 	private static int exhaustiveSearchDepth = 1; //5;
 	private static boolean randomizeSearchDepth = true;
+	private static Optional<double[]> moralValues = Optional.empty();
+	private static boolean moralFilterEnabled = true;
 	
 	public Action[] forbiddenActs = null;
 	
@@ -64,7 +76,7 @@ public class ActionSelect{
 		ActionSelect.greedyLeafPathLength = Integer.valueOf(selectionParams.get("greedyLeafPathLength"));
 		ActionSelect.exhaustiveSearchDepth = Integer.valueOf(selectionParams.get("exhaustiveSearchDepth"));
 		ActionSelect.randomizeSearchDepth = Boolean.valueOf(selectionParams.get("randomizeSearchDepth"));
-		System.out.println("selectionParams in ActionSelect: " + selectionParams.toString());
+		log.log(Level.FINE,"selectionParams in ActionSelect: " + selectionParams.toString());
 	}
 
 	
@@ -81,7 +93,21 @@ public class ActionSelect{
     public void addModelForActBias(RegressionModel supplModel, HInfluence hInf) {
     	this.valFcnModel = new CombinationModel(this.valFcnModel, supplModel, hInf);
     }
-
+    
+    public static void setMoralValues(double[] arr)
+    {
+    	moralValues = Optional.ofNullable(arr);
+    	if(moralValues.isPresent() && arr.length != 2)
+    		throw new IllegalArgumentException("Expected a double[]{Immoral Value, Moral Value}!");
+    	if(moralValues.isPresent() && arr[0] > arr[1])
+    		throw new IllegalArgumentException("Expected a value for immorality less than the value for morality!");
+    	ActionSelect.setMoralFilterEnabled(false);
+    }
+    
+    public static void setMoralFilterEnabled(boolean enabled)
+    {
+    	moralFilterEnabled = enabled;
+    }
     
     public void setEnvTransModel(EnvTransModel envTransModel){ this.envTransModel = envTransModel;}
     public EnvTransModel getEnvTransModel(){ return this.envTransModel; }
@@ -114,11 +140,35 @@ public class ActionSelect{
 		this.discountType = discountType;
 	}
 	
+	public Action selectAction(Observation obs, Action lastAct, Optional<Map<Action,Boolean>> actionMoralities)
+	{
+		if(actionMoralities != null && actionMoralities.isPresent())
+		{
+			if(this.treeSearch)
+			{
+				System.err.println("Tree search not supported with morality!");
+				System.exit(0);
+				return null;
+			}
+			if (this.selectionMethod.equals("greedy")) {
+				return ActionSelect.greedyActSelect(this.valFcnModel, obs, lastAct, actionMoralities);
+			}
+			else if (this.selectionMethod.equals("e-greedy")) {
+				double epsilon = Double.valueOf(selectionParams.get("epsilon"));
+				Action chosenAction = ActionSelect.eGreedyActSelect(epsilon, 
+						this.valFcnModel, obs, lastAct, actionMoralities);
+				return chosenAction;
+			}
+			else {
+				System.err.println("Action selection method " + this.selectionMethod + " not supported. Exiting.");
+				System.exit(0);
+				return null;
+			}
+		}
+		else
+			return selectAction(obs, lastAct);
+	}
 	
-	
-	
-	
-    
 	public Action selectAction(Observation obs, Action lastAct){
 		//System.out.println("selectionMethod is "+selectionMethod);
 		if (this.treeSearch) {
@@ -219,6 +269,85 @@ public class ActionSelect{
 		return possActs.get(chosenActI);
 	}
 	
+	private static Map<Action, Double> getStateActValues(RegressionModel valFcnModel, Observation obs)
+	{
+		if(valFcnModel.noRealValFeats())
+		{
+			Map<Action, Double> valueMap = new HashMap<>();
+			ArrayList<Action> allActions = valFcnModel.getFeatGen().getPossActions(obs);
+			double[] allValues = valFcnModel.getStateActOutputs(obs, allActions);
+			for(int i = 0; i < allActions.size(); ++i)
+				valueMap.put(allActions.get(i), allValues[i]);
+			return valueMap;
+		}
+		else
+		{
+			System.err.println("ActionSelect.getStateActValues() does not yet support real-valued actions variables. Exiting.");
+			System.exit(1);
+		}
+		//never reached
+		return null;
+	}
+	
+	private static Action greedyActSelect(RegressionModel valFcnModel, Observation obs, Action lastAct, Optional<Map<Action, Boolean>> actionMoralities){
+		if(actionMoralities == null || !actionMoralities.isPresent())
+		{
+			return greedyActSelect(valFcnModel, obs, lastAct);
+		}
+		Map<Action, Boolean> moralMap = actionMoralities.get();
+		Map<Action, Double> valueMap = getStateActValues(valFcnModel, obs);
+		//contains only action-value pairs for moral moves
+		Map<Action, Double> moralValueMap = new HashMap<>();
+		for(Map.Entry<Action, Double> e : valueMap.entrySet())
+		{
+			if(!moralMap.containsKey(e.getKey()))
+				throw new IllegalStateException("Moral map indicates that a move is impossible, while featGen from valFcnModel thinks the move is possible!!!");
+			if(!moralFilterEnabled || moralValues.isPresent() || moralMap.get(e.getKey()).booleanValue())
+			{
+				Double actionValue = e.getValue();
+				if(moralValues.isPresent())
+				{
+					actionValue += moralValues.get() 
+						[moralMap.get(e.getKey()).booleanValue() ? 1 : 0];
+				}
+				moralValueMap.put(e.getKey(), actionValue);
+			}
+		}
+		System.out.println(moralValueMap.size() + " " + valFcnModel.getFeatGen().getPossActions(obs).size());
+		log.log(Level.FINER,"Moral greedy has "+moralValueMap.size()+" moral actions to choose from");
+		if (moralValueMap.size() == 0) {
+			System.err.println("Defaulting to greedyActSelect");
+			return greedyActSelect(valFcnModel, obs, lastAct);
+//			System.err.println("A list of zero moral maximum acts was returned by RegressionModel.getMaxActs(). Exiting.");
+//			System.err.println("state-action values: " + Arrays.toString(valFcnModel.getStateActOutputs(obs, 
+//																		valFcnModel.getFeatGen().getPossActions(obs))));
+//			System.exit(1);
+		}
+		Double maxVal = Collections.max(moralValueMap.entrySet(), Map.Entry.comparingByValue()).getValue();
+		List<Action> maxActs = moralValueMap.entrySet()
+			.stream()
+			.filter((e) -> e.getValue().doubleValue() == maxVal.doubleValue())
+			.map(Map.Entry<Action, Double>::getKey)
+			.collect(Collectors.toList());
+		boolean lastActIsGreedy = false;
+		if (lastAct != null) {
+			for (Action act: maxActs){
+				if (Arrays.equals(act.intArray, lastAct.intArray) &&
+						Arrays.equals(act.doubleArray, lastAct.doubleArray) &&
+						Arrays.equals(act.charArray, lastAct.charArray)) { 
+					lastActIsGreedy = true; 
+					break; 
+				} 
+			}
+		}
+		if (lastActIsGreedy)
+			return lastAct.duplicate();
+		else {
+			int actIndex = FeatGenerator.staticRandGenerator.nextInt(maxActs.size());
+			return maxActs.get(actIndex);
+		}
+	}
+	
 	private static Action greedyActSelect(RegressionModel valFcnModel, Observation obs, Action lastAct){
 		ArrayList<Action> maxActs =  valFcnModel.getMaxActs(obs, null);
 		if (maxActs.size() == 0) {
@@ -248,23 +377,29 @@ public class ActionSelect{
 		
 	private static Action eGreedyActSelect(double epsilon,
 								RegressionModel valFcnModel, Observation obs,
-								Action lastAct){
+								Action lastAct, Optional<Map<Action, Boolean>> actionMoralities){
 		//System.out.println("epsilon: " + epsilon);
+		if(actionMoralities == null || !actionMoralities.isPresent())
+		{
+			return eGreedyActSelect(epsilon, valFcnModel, obs, lastAct);
+		}
 		if ((new Random()).nextDouble() > epsilon){
-			return ActionSelect.greedyActSelect(valFcnModel, obs, lastAct);
+			return ActionSelect.greedyActSelect(valFcnModel, obs, lastAct, actionMoralities);
 		}
 		else {
 			return valFcnModel.getRandomAction();
 		}
 	}	
 	
-	
-	
-	
-	
-	
-	
-	
+	private static Action eGreedyActSelect(double epsilon, RegressionModel valFcnModel, Observation obs,
+			Action lastAct) {
+		// System.out.println("epsilon: " + epsilon);
+		if ((new Random()).nextDouble() > epsilon) {
+			return ActionSelect.greedyActSelect(valFcnModel, obs, lastAct);
+		} else {
+			return valFcnModel.getRandomAction();
+		}
+	}
 
 	/**
 	 * Searches exhaustively to exhaustiveSearchDepth (or to a depth drawn uniformly from 

@@ -1,40 +1,19 @@
 package edu.utexas.cs.tamerProject.applet;
 
-/*
-By Brad Knox.
-*/
-import java.applet.AppletContext;
 import java.awt.Color;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.io.BufferedInputStream;
-import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
-import java.net.UnknownHostException;
-import java.util.*;
-
-import java.util.Properties;
-
+import java.util.Observable;
+import java.util.Observer;
+import java.util.logging.Level;
 
 import javax.swing.JApplet;
+
+import edu.utexas.cs.tamerProject.logger.Log;
 
 
 public class RLApplet extends JApplet 
@@ -48,7 +27,7 @@ public class RLApplet extends JApplet
 	public static boolean DEBUG_TIME = false; // keep false as default
 	public static boolean IN_BROWSER = true;
 	
-	public static URL dataCollectURL = null; 
+	public static URL dataCollectURL = null;
 //	static {
 //		try { 
 //			dataCollectURL = null;// new URL("http://... <point to the location of tamer.php without including the file "tamer.php" itself in the URL>");  
@@ -58,6 +37,8 @@ public class RLApplet extends JApplet
 //		}
 //	}
 	
+	private static final Log log = new Log(//edit these values as desired (class, Level, less trace information)
+			RLApplet.class, Level.FINE, Log.Simplicity.HIGH);//basic logging functionality
 	
 	public void init() {
 		super.init();
@@ -65,12 +46,12 @@ public class RLApplet extends JApplet
 		int height = this.getHeight();
 		int width = this.getWidth();
 		rlPanel = makeRLPanel();
-		System.out.println("setting to size: " + width + ", " + height);
-		System.out.println("size before in RLApplet.init(): " + this.getWidth() + ", " + this.getHeight());
+		log.log(Level.FINE,"setting to size: " + width + ", " + height);
+		log.log(Level.FINE,"size before in RLApplet.init(): " + this.getWidth() + ", " + this.getHeight());
 		System.out.flush();
 		rlPanel.setSize(width, height);
-		System.out.println("size after in RLApplet.init(): " + this.getWidth() + ", " + this.getHeight());
-		System.out.println("rlpanel size after in RLApplet.init(): " + rlPanel.getWidth() + ", " + rlPanel.getHeight());
+		log.log(Level.FINE,"size after in RLApplet.init(): " + this.getWidth() + ", " + this.getHeight());
+		log.log(Level.FINE,"rlpanel size after in RLApplet.init(): " + rlPanel.getWidth() + ", " + rlPanel.getHeight());
 		System.out.flush();
 		this.setBackground(Color.black);
 
@@ -94,7 +75,7 @@ public class RLApplet extends JApplet
 					
 			// Get the duration of a time step in milliseconds. Smaller values create faster transitions.
 			String speedStr = getParameter("speed");
-			System.out.println("speed: " + speedStr);
+			log.log(Level.FINER,"speed: " + speedStr);
 			if (speedStr != null) 
 				RunLocalExperiment.stepDurInMilliSecs = Integer.valueOf(speedStr);
 			
@@ -113,8 +94,9 @@ public class RLApplet extends JApplet
 		initPanel();
 		
 		
-		
-		System.out.println("\n\n\nEnd of init()\n\n\n");
+		log.log(Level.FINEST,"\n\n");
+		log.log(Level.FINE,"\nEnd of init()\n");
+		log.log(Level.FINEST,"\n\n");
 	}
 	
 	public RLPanel getRLPanel(){return this.rlPanel;}

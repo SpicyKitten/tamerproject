@@ -95,10 +95,11 @@ public class FeatGen_Tetris extends FeatGenerator{
     	gameState.currentY = obs.intArray[gameState.worldState.length + 4];
 	    gameState.worldWidth = obs.intArray[gameState.worldState.length + 5];
         gameState.worldHeight = obs.intArray[gameState.worldState.length + 6];
+        gameState.currentBlockColorId = obs.intArray[gameState.worldState.length + 7];
 	}
 	
 	public double[] getSAFeats(Observation obs, Action act){
-		this.setStateFromObs(obs); 
+		this.setStateFromObs(obs);
 		//gameState.printState(); //// print state for debugging
 		//// use state vars and action to determine next state (after line clear)
 		for (int actI = 0; actI < act.intArray.length; actI++){ //// take actions

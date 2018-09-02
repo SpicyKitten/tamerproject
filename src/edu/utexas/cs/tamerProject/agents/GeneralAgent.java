@@ -17,51 +17,59 @@ package edu.utexas.cs.tamerProject.agents;
 
 
 
-import java.net.URL;
-import java.util.Random;
-import java.util.Date;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.io.*;
-import java.util.concurrent.TimeUnit;
-import java.net.URLClassLoader;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.URL;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
 
-
-import org.rlcommunity.rlglue.codec.taskspec.TaskSpecVRLGLUE3;
-import org.rlcommunity.rlglue.codec.types.Reward_observation_terminal;
 import org.rlcommunity.rlglue.codec.AgentInterface;
 import org.rlcommunity.rlglue.codec.taskspec.TaskSpec;
-import org.rlcommunity.rlglue.codec.taskspec.ranges.AbstractRange;
+import org.rlcommunity.rlglue.codec.taskspec.TaskSpecVRLGLUE3;
 import org.rlcommunity.rlglue.codec.taskspec.ranges.DoubleRange;
 import org.rlcommunity.rlglue.codec.taskspec.ranges.IntRange;
 import org.rlcommunity.rlglue.codec.types.Action;
 import org.rlcommunity.rlglue.codec.types.Observation;
-
-import rlVizLib.general.ParameterHolder;
-import rlVizLib.general.hasVersionDetails;
-import rlVizLib.messaging.NotAnRLVizMessageException;
-import rlVizLib.messaging.agent.AgentMessageParser;
-import rlVizLib.messaging.agent.AgentMessages;
-import rlVizLib.messaging.agentShell.TaskSpecResponsePayload;
+import org.rlcommunity.rlglue.codec.types.Reward_observation_terminal;
 
 import edu.utexas.cs.tamerProject.actSelect.ActionSelect;
-import edu.utexas.cs.tamerProject.modeling.*;
+import edu.utexas.cs.tamerProject.logger.Log;
+import edu.utexas.cs.tamerProject.logger.Log.Simplicity;
+import edu.utexas.cs.tamerProject.agents.tamer.HRew;
+import edu.utexas.cs.tamerProject.agents.tamer.TamerAgent;
+import edu.utexas.cs.tamerProject.experimentTools.LogTrainer;
+import edu.utexas.cs.tamerProject.experimentTools.RecordHandler;
+import edu.utexas.cs.tamerProject.featGen.FeatGen_DiscreteIndexer;
+import edu.utexas.cs.tamerProject.featGen.FeatGen_Discretize;
+import edu.utexas.cs.tamerProject.featGen.FeatGen_NoChange;
+import edu.utexas.cs.tamerProject.featGen.FeatGen_RBFs;
+import edu.utexas.cs.tamerProject.featGen.FeatGen_Tetris;
+import edu.utexas.cs.tamerProject.featGen.FeatGenerator;
+import edu.utexas.cs.tamerProject.modeling.IncGDLinearModel;
+import edu.utexas.cs.tamerProject.modeling.TabularModel;
 import edu.utexas.cs.tamerProject.modeling.templates.RegressionModel;
 import edu.utexas.cs.tamerProject.modeling.weka.WekaModelPerActionModel;
 import edu.utexas.cs.tamerProject.modeling.weka.WekaModelWrap;
-import edu.utexas.cs.tamerProject.experimentTools.LogTrainer;
-import edu.utexas.cs.tamerProject.experimentTools.RecordHandler;
-import edu.utexas.cs.tamerProject.featGen.*;
 import edu.utexas.cs.tamerProject.params.Params;
 import edu.utexas.cs.tamerProject.utils.MutableDouble;
 import edu.utexas.cs.tamerProject.utils.Stopwatch;
 import edu.utexas.cs.tamerProject.utils.encapsulation.ObsAndAct;
-import edu.utexas.cs.tamerProject.agents.sarsaLambda.SarsaLambdaAgent;
-import edu.utexas.cs.tamerProject.agents.tamer.HRew;
+import rlVizLib.general.ParameterHolder;
+import rlVizLib.messaging.NotAnRLVizMessageException;
+import rlVizLib.messaging.agent.AgentMessageParser;
+import rlVizLib.messaging.agent.AgentMessages;
+import rlVizLib.messaging.agentShell.TaskSpecResponsePayload;
 
 /**
  * This abstract class is the ancestor of all other major agent classes in this project. 
@@ -70,7 +78,12 @@ import edu.utexas.cs.tamerProject.agents.tamer.HRew;
  * all agents are children of GeneralAgent.
  */
 public abstract class GeneralAgent implements AgentInterface{
-
+	
+	
+	private static final Log log = new Log
+	(//edit these values as desired (class, Level, less trace information)
+		GeneralAgent.class, Level.FINE, Simplicity.HIGH
+	);//basic logging functionality
 	
 	public static final int MAX_STEPS_SET_BY_EXP = 10000000;
 	
@@ -87,7 +100,8 @@ public abstract class GeneralAgent implements AgentInterface{
     //// recent experience
 	public volatile ObsAndAct currObsAndAct;
 	public ObsAndAct lastObsAndAct;
-	public ArrayList<HRew> hRewList;
+	public Map<String, ArrayList<HRew>> nRewList;
+//	public ArrayList<HRew> hRewList;
 	public ArrayList<HRew> hRewThisStep;
 	public boolean takesHRew = true;
 	protected double stepStartTime;
@@ -160,7 +174,7 @@ public abstract class GeneralAgent implements AgentInterface{
 	protected boolean learningOnly = false;
     
 	public void processPreInitArgs(String[] args) {
-		System.out.println("\n[------Process pre-init args in " + this.getClass().getSimpleName() 
+		log.log(Level.FINE,"\n[------Process pre-init args in " + this.getClass().getSimpleName() 
 				+ "------] " + Arrays.toString(args));
 		for (int i = 0; i < args.length; i++) {
     		String argType = args[i];
@@ -277,45 +291,46 @@ public abstract class GeneralAgent implements AgentInterface{
     
     // Called when the environment is loaded (when "Load Experiment" is clicked in RLViz)
     protected static void agent_init(String taskSpec, GeneralAgent agent) {
-    	System.out.println("\n\n\n----Agent " + agent.getClass().getName() + " is being initialized.----");
+    	log.log(Level.FINER,"\n\n");
+    	log.log(Level.INFO,"\n----Agent " + agent.getClass().getName() + " is being initialized.----");
     	agent.startInitHelper(taskSpec); 
     	
 		//// INITIALIZE FeatGenerator
-    	System.out.println("featGen before initialization: " + agent.featGen);
+    	log.log(Level.FINER,"featGen before initialization: " + agent.featGen);
 		if (agent.featGen == null)
 			agent.featGen = agent.getFeatGen(agent.params);
 		else
-			System.out.println("Keeping a previously instantiated featGen in agent_init()!!!!!");
-		System.out.println("featGen after initialization: " + agent.featGen);
+			log.log(Level.FINE,"Keeping a previously instantiated featGen in agent_init()!!!!!");
+		log.log(Level.FINER,"featGen after initialization: " + agent.featGen);
 		
 		//// INITIALIZE RegressionModel
-    	System.out.println("model: " + agent.model);
+    	log.log(Level.FINER,"model: " + agent.model);
 		if (agent.model == null)
 			agent.setModel();
 		else
-			System.out.println("Keeping a previously instantiated model in agent_init()!!!!!");
-		System.out.println("model after initialization: " + agent.model);
+			log.log(Level.FINE,"Keeping a previously instantiated model in agent_init()!!!!!");
+		log.log(Level.FINER,"model after initialization: " + agent.model);
 		
 		agent.recHandler = new RecordHandler(GeneralAgent.canWriteToFile);
-		System.out.println(agent.getClass().getName() + " masterLogSwitch: " + agent.masterLogSwitch);
+		log.log(Level.INFO,agent.getClass().getName() + " masterLogSwitch: " + agent.masterLogSwitch);
 		
 		/*
 		 *  Write parameters to log files
 		 */
 		if (agent.masterLogSwitch) {
 			if (agent.recordLog) {
-	    		System.out.println("Log base path: " + agent.writeLogDir);
+	    		log.log(Level.INFO,"Log base path: " + agent.writeLogDir);
 	    		if (agent.recHandler.canWriteToFile) {
 	    			(new File(agent.writeLogDir)).mkdir();
 	    		}
-	    		System.out.println("agent.writeLogPath: " + agent.writeLogPath);
+	    		log.log(Level.INFO,"agent.writeLogPath: " + agent.writeLogPath);
 	    		agent.recHandler.writeParamsToFullLog(agent.writeLogPath, agent.params);
 	    	}
 			if (agent.recordRew) {
-				System.out.println("Reward log base path: " + agent.writeRewDir);
+				log.log(Level.INFO,"Reward log base path: " + agent.writeRewDir);
 				if (agent.recHandler.canWriteToFile)
 					(new File(agent.writeLogDir)).mkdir();
-				System.out.println("agent.writeRewPath: " + agent.writeRewPath);
+				log.log(Level.INFO,"agent.writeRewPath: " + agent.writeRewPath);
 	    		agent.recHandler.writeParamsToRewLog(agent.writeRewPath, agent.params);
 			}
 			
@@ -348,11 +363,11 @@ public abstract class GeneralAgent implements AgentInterface{
 //			} 
     	}
 
-    	System.out.println("Task specification string: " + taskSpec);
+    	log.log(Level.FINE,"Task specification string: " + taskSpec);
         taskSpecObj = new TaskSpecVRLGLUE3(taskSpec);
-		System.out.println("Agent parsed the task spec.");
+		log.log(Level.FINEST,"Agent parsed the task spec.");
 		this.envName = getEnvName(taskSpecObj.getExtraString());
-		System.out.println("taskStr: " + taskSpecObj.toString());
+		log.log(Level.FINEST,"taskStr: " + taskSpecObj.toString());
 		if (this.envName.equals("")) {
 			taskSpecObj = new TaskSpecVRLGLUE3("VERSION RL-Glue-3.0 PROBLEMTYPE episodic DISCOUNTFACTOR 1.0" + 
 						" OBSERVATIONS INTS (0 1) (0 1) (0 1) (0 3) (0 1)" + 
@@ -362,11 +377,10 @@ public abstract class GeneralAgent implements AgentInterface{
 						" REWARDS (-1.0 0.0)  EXTRA EnvName:Mario Revision:null");
 			this.envName = getEnvName(taskSpecObj.getExtraString());
 		}
-		System.out.println("Environment name: " + envName);
+		log.log(Level.FINE,"Environment name: " + envName);
 		if (this.params == null)
 			this.params = Params.getParams(this.getClass().getName(), envName);
-		System.out.println("params: " + params.toOneLineStr());
-
+		log.log(Level.FINE,"params: " + params.toOneLineStr());
 		this.theObsIntRanges = getObsIntRanges(taskSpecObj); 
 		
 		this.theObsDoubleRanges = getObsDoubleRanges(taskSpecObj);
@@ -375,16 +389,14 @@ public abstract class GeneralAgent implements AgentInterface{
         
         this.theActDoubleRanges = getActDoubleRanges(taskSpecObj);
         
-        
-        
 		this.theRewardRange = taskSpecObj.getRewardRange();
-		System.out.println("Reward range is: " + this.theRewardRange.getMin() + " to " + this.theRewardRange.getMax());
+		log.log(Level.FINER,"Reward range is: " + this.theRewardRange.getMin() + " to " + this.theRewardRange.getMax());
 		this.discountFactorOfMDP = taskSpecObj.getDiscountFactor();
 		if (this.discountFactorForLearning == null)
 			this.discountFactorForLearning = new MutableDouble(this.discountFactorOfMDP);
 		
-		System.out.println("Discount factor of MDP is: " + this.discountFactorOfMDP);
-		System.out.println("Discount factor for learning is: " + this.discountFactorForLearning.getValue());
+		log.log(Level.FINER,"Discount factor of MDP is: " + this.discountFactorOfMDP);
+		log.log(Level.FINER,"Discount factor for learning is: " + this.discountFactorForLearning.getValue());
 		
         this.currObsAndAct = new ObsAndAct();
         this.currObsAndAct.setAct(new Action(taskSpecObj.getNumDiscreteActionDims(), taskSpecObj.getNumContinuousActionDims()));
@@ -393,7 +405,7 @@ public abstract class GeneralAgent implements AgentInterface{
     
 	public static int[][] getObsIntRanges(TaskSpecVRLGLUE3 taskSpecObj){ 
 		int obsIntDims = taskSpecObj.getNumDiscreteObsDims();
-		System.out.println("Observations have " + obsIntDims + " integer dimensions");
+		log.log(Level.FINER,"Observations have " + obsIntDims + " integer dimensions");
 		int[][] theObsIntRanges = new int[obsIntDims][2]; 
 		for (int i = 0; i < obsIntDims; i++) {
 		    IntRange thisObsIntRange = taskSpecObj.getDiscreteObservationRange(i);
@@ -405,7 +417,7 @@ public abstract class GeneralAgent implements AgentInterface{
 	}
 	public static double[][] getObsDoubleRanges(TaskSpecVRLGLUE3 taskSpecObj){
 		int obsDoubleDims = taskSpecObj.getNumContinuousObsDims();
-		System.out.println("Observations have " + obsDoubleDims + " double dimensions");
+		log.log(Level.FINER,"Observations have " + obsDoubleDims + " double dimensions");
 		double[][] theObsDoubleRanges = new double[obsDoubleDims][2]; 
 	    for (int i = 0; i < obsDoubleDims; i++) {
 	        DoubleRange thisObsDoubleRange = taskSpecObj.getContinuousObservationRange(i);
@@ -417,7 +429,7 @@ public abstract class GeneralAgent implements AgentInterface{
 	}
 	public static int[][] getActIntRanges(TaskSpecVRLGLUE3 taskSpecObj){ 
 		int actIntDims = taskSpecObj.getNumDiscreteActionDims();
-		System.out.println("Actions have " + actIntDims + " integer dimensions");
+		log.log(Level.FINER,"Actions have " + actIntDims + " integer dimensions");
 		int[][] theActIntRanges = new int[actIntDims][2]; 
 	    for (int i = 0; i < actIntDims; i++) {
 	        IntRange thisActIntRange = taskSpecObj.getDiscreteActionRange(i);
@@ -429,7 +441,7 @@ public abstract class GeneralAgent implements AgentInterface{
 	}
 	public static double[][] getActDoubleRanges(TaskSpecVRLGLUE3 taskSpecObj){
 		int actDoubleDims = taskSpecObj.getNumContinuousActionDims();
-		System.out.println("Actions have " + actDoubleDims + " double dimensions");
+		log.log(Level.FINER,"Actions have " + actDoubleDims + " double dimensions");
 		double[][] theActDoubleRanges = new double[actDoubleDims][2]; 
 	    for (int i = 0; i < actDoubleDims; i++) {
 	        DoubleRange thisActDoubleRange = taskSpecObj.getContinuousActionRange(i);
@@ -482,12 +494,13 @@ public abstract class GeneralAgent implements AgentInterface{
     	this.stepsThisEp = 0;
     	this.rewThisEp = 0;
     	this.lastObsAndAct = new ObsAndAct();
-		this.hRewList = new ArrayList<HRew>();
+//		this.hRewList = new ArrayList<HRew>();
+		this.setNRewList("hRew", null);
 //		this.hRewCounter = 0;
     }
     
     public FeatGenerator getFeatGen(Params params) {
-		System.out.println("Creating feature generation class " + params.featClass + ".");
+		log.log(Level.FINE,"Creating feature generation class " + params.featClass + ".");
 		FeatGenerator featGen = null;
 		int[][] actIntRanges = this.theActIntRanges;
 		double[][] actDoubleRanges = this.theActDoubleRanges;
@@ -522,19 +535,19 @@ public abstract class GeneralAgent implements AgentInterface{
     				actIntRanges, actDoubleRanges);
     	}
     	else {
-	    		System.out.println("The current code doesn't support class " + params.featClass
+	    		log.log(Level.WARNING,"The current code doesn't support class " + params.featClass
     					+ " for feature generation. Adding support might be trivial. " +
-    							"(Printed from GeneralAgent.getFeatGen().)");
+    							"Adjust GeneralAgent.log for more.",Log.Simplicity.NONE);
     	}
     	return featGen;
     }
     
     
     private void setModel() {
-		System.out.println("Creating model class " + this.params.modelClass + " for " + 
+		log.log(Level.FINE,"Creating model class " + this.params.modelClass + " for " + 
 							this.getClass() + ".");
     	if (this.params.modelClass.equals("IncGDLinearModel")) {
-    		System.out.println("featGen before initialization: " + featGen);
+    		log.log(Level.FINER,"featGen before initialization: " + featGen);
     		this.model = new IncGDLinearModel(this.featGen.getNumFeatures(), this.params.stepSize, 
     											this.featGen, this.params.initWtsValue, 
     											this.params.modelAddsBiasFeat);
@@ -550,7 +563,7 @@ public abstract class GeneralAgent implements AgentInterface{
     		this.model = new WekaModelWrap(this.featGen, this.params.wekaModelName);
     	}
     	else if(this.params.modelClass.equals("TabularModel")) {
-    		System.out.println(this.featGen);
+    		log.log(Level.FINER,this.featGen.toString());
     		if (!this.featGen.getClass().equals(FeatGen_DiscreteIndexer.class)) {
     			System.err.println("Agent's function approx model type TabularModel can " +
     					"only be used with feature generator FeatGen_DiscreteIndexer. " +
@@ -566,9 +579,9 @@ public abstract class GeneralAgent implements AgentInterface{
 																this.params.traceType);
     	}
     	else {
-	    		System.out.println("The current code doesn't support class " + this.params.modelClass
-    					+ " for modeling. Adding support might be trivial." +
-						"(Printed from GeneralAgent.getFeatGen().)");
+	    		log.log(Level.WARNING,"The current code doesn't support class " + this.params.modelClass
+    					+ " for modeling. Adding support might be trivial. " +
+						"Adjust GeneralAgent.log for more.",Log.Simplicity.NONE);
     	}
 		if (this.params.initModelWSamples)
 			this.model.biasWGenSamples(this.params.numBiasingSamples, this.params.initSampleValue, 
@@ -581,7 +594,7 @@ public abstract class GeneralAgent implements AgentInterface{
     	//this.featGen = getFeatGen();
     	this.featGen = this.getFeatGen(this.params);
     	this.featGen.setSupplModel(model, featGen);
-    	System.out.println("\n\nfeatGen in " + this.getClass().getName() + " after adding feature: " + featGen);
+    	log.log(Level.FINER,"\n\nfeatGen in " + this.getClass().getName() + " after adding feature: " + featGen);
     }
     
 
@@ -647,8 +660,10 @@ public abstract class GeneralAgent implements AgentInterface{
 //    	if (!this.isTopLevelAgent)
 //    		System.out.println("rewThisEp in " + this.getClass().getName() + ": " + this.rewThisEp);
 //    	this.hRewThisStep = this.hRewCounter;
-    	this.hRewThisStep = new ArrayList<HRew>(this.hRewList);
-    	this.hRewList.clear();
+    	this.hRewThisStep = this.getNRewList("hRew",true);
+//    	this.hRewThisStep = new ArrayList<HRew>(this.hRewList);
+    	this.getNRewList("hRew").clear();
+//    	this.hRewList.clear();
     	ObsAndAct newCurrObsAndAct = new ObsAndAct();
     	newCurrObsAndAct.setObs(o.duplicate());
     	this.currObsAndAct = newCurrObsAndAct;
@@ -705,8 +720,10 @@ public abstract class GeneralAgent implements AgentInterface{
     	this.stepsThisEp++;
     	this.totalRew += r;
     	this.rewThisEp += r;
-    	this.hRewThisStep = new ArrayList<HRew>(this.hRewList);
-    	this.hRewList.clear();
+    	this.hRewThisStep = this.getNRewList("hRew",true);
+//    	this.hRewThisStep = new ArrayList<HRew>(this.hRewList);
+    	this.getNRewList("hRew").clear();
+//    	this.hRewList.clear();
     	this.logStep(this.writeLogPath, null, null, r, this.hRewThisStep, this.stepStartTime);
     	this.currObsAndAct.setAct(new Action());
 //    	if (!this.isTopLevelAgent)
@@ -841,9 +858,9 @@ public abstract class GeneralAgent implements AgentInterface{
 	public void toggleInTrainSess() {
 			this.inTrainSess = !this.inTrainSess;
 			if (this.inTrainSess)
-				System.out.println("---Starting training session.---");
+				log.log(Level.INFO,"---Starting training session.---");
 			else
-				System.out.println("---Ending training session---");
+				log.log(Level.INFO,"---Ending training session---");
 	}
 	
 	public void togglePause() {
@@ -1028,12 +1045,62 @@ public abstract class GeneralAgent implements AgentInterface{
     	}
     }
 	
-	public void addHRew(double feedbackVal) {
-		this.hRewList.add(new HRew(feedbackVal, Stopwatch.getComparableTimeInSec()));
+	public void addNRew(String nameOfRewList, double feedbackVal)  {
+		this.getNRewList(nameOfRewList).add(new HRew(feedbackVal, Stopwatch.getComparableTimeInSec()));
 	}
 	
-
-
+	public void addHRew(double feedbackVal) {
+//		this.hRewList.add(new HRew(feedbackVal, Stopwatch.getComparableTimeInSec()));
+		addNRew("hRew", feedbackVal);
+	}
+	
+	/**
+	 * Gets a named reward list reference or a copy of it. Doesn't return null.
+	 * @param returnCopyOfList If the reward list will be copied before returning
+	 */
+	public ArrayList<HRew> getNRewList(String name, boolean returnCopyOfList)
+	{
+		if(this.nRewList == null)
+			this.nRewList = new HashMap<String, ArrayList<HRew>>();
+		if(!this.nRewList.containsKey(name) || this.nRewList.get(name) == null)
+			this.nRewList.put(name, new ArrayList<HRew>());
+		return returnCopyOfList ? new ArrayList<HRew>(this.nRewList.get(name)) 
+				: this.nRewList.get(name);
+	}
+	
+	/**
+	 * Gets a named reward list reference. Doesn't return null.
+	 */
+	public ArrayList<HRew> getNRewList(String name)
+	{
+		return this.getNRewList(name, false);
+	}
+	
+	/**
+	 * Directly sets the named reward list, possibly copying contents by value.
+	 * Doesn't set a reward list to null. Instead, it will set it to empty.
+	 */
+	public void setNRewList(String name, ArrayList<HRew> list, boolean copyContentsByValue)
+	{
+		if(this.nRewList == null)
+			this.nRewList = new HashMap<String, ArrayList<HRew>>();
+		if(list == null)
+			this.nRewList.put(name, new ArrayList<HRew>());
+		else if(copyContentsByValue)
+			this.nRewList.put(name, new ArrayList<HRew>(list));
+		else
+			this.nRewList.put(name, list);
+	}
+	
+	/**
+	 * Directly sets the named reward list, not copying contents by value.
+	 * Doesn't set a reward list to null. Instead, it will set it to empty.
+	 */
+	public void setNRewList(String name, ArrayList<HRew> list)
+	{
+		this.setNRewList(name, list, false);
+	}
+	
     public void sendAction(Action act) {
     	try {
     		InetAddress serverAddr = InetAddress.getByName("127.0.0.1");
@@ -1075,5 +1142,58 @@ public abstract class GeneralAgent implements AgentInterface{
     	if (verbose)
     		System.out.println(str);
     }
-
+    
+    ////// Alternate methods for //////
+    ////// modifying parameters, //////
+    ////// which could be useful //////
+    ////// in classes that need  //////
+    ////// to delegate these     //////
+    ////// types of modification //////
+    public void setParams(Params p)
+    {
+    	this.params = p;
+    }
+    
+    public Params getParams()
+    {
+    	return params;
+    }
+    
+    public <T> void param(String parameter, T value)
+    {
+    	try 
+    	{
+	    	Field f = Params.class.getDeclaredField(parameter);
+	    	f.set(this.params, value);
+    	}
+    	catch(Exception e)
+    	{
+    		System.err.println("Failed to set parameter "+ parameter + " of "
+    				+ "agent "+this.toString()+"to " + value.toString());
+    		e.printStackTrace();
+    	}
+    }
+    
+    public <T> T param(String parameter)
+    {
+    	try
+    	{
+    		Field f = Params.class.getDeclaredField(parameter);
+    		return (T) f.get(this.params);
+    	}
+    	catch(Exception e)
+    	{
+    		System.err.println("Failed to get parameter "+ parameter + " of agent "+this.toString());
+    		e.printStackTrace();
+    	}
+    	return null;
+    }
+    public static void main(String[] args)
+    {
+    	GeneralAgent g = new TamerAgent();
+    	g.initParams("Tetris");
+    	Double d = g.param("biasSampleWt");
+    	System.out.println(d);
+    	System.out.println(g.toString());
+    }
 }

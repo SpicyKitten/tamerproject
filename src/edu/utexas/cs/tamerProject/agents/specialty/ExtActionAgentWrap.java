@@ -77,7 +77,7 @@ import edu.utexas.cs.tamerProject.agents.tamerrl.TamerRLAgent;
  * @author bradknox
  *
  */
-public class ExtActionAgentWrap extends GeneralAgent{
+public class ExtActionAgentWrap extends GeneralAgent implements ExtActionWrapper{
 	public GeneralAgent coreAgent;
 	private int[] currExtendedAction;
 	private int currExtActI;
@@ -146,6 +146,7 @@ public class ExtActionAgentWrap extends GeneralAgent{
     //public Action agent_step(double r, Observation o) {
     	this.rewThisExtAct += r;
     	this.currExtActI++;
+//    	System.out.println("this.currExtActI: " + (this.currExtActI+1)+"/"+this.currExtendedAction.length);
     	if (currExtActI >= this.currExtendedAction.length ||
     			this.callCoreAgentEveryStep) {
     		//System.out.println("this.currExtActI: " + this.currExtActI);
@@ -163,7 +164,9 @@ public class ExtActionAgentWrap extends GeneralAgent{
     
     public void agent_end(double r, double time) {
     	this.rewThisExtAct += r;
-    	System.out.println(this.coreAgent.currEpNum + ": " + this.coreAgent.rewThisEp);
+    	System.out.println(String.format("Agent episode %d reward: %f", 
+    			this.coreAgent.currEpNum, this.coreAgent.rewThisEp));
+//    	System.out.println(this.coreAgent.currEpNum + ": " + this.coreAgent.rewThisEp);
     	this.coreAgent.agent_end(r, time);
     }
     
@@ -206,6 +209,24 @@ public class ExtActionAgentWrap extends GeneralAgent{
     	//else {
     		//agent.runSelf();
     	//}
-    }  
+    }
     
+    /**
+     * temp method for access
+     * :(
+     */
+    public int[] getExtendedActionAsIntArray()
+    {
+    	return this.currExtendedAction;
+    }
+    
+	@Override
+	public boolean actionExhausted() 
+	{
+		//System.out.println("Index is "+currExtActI+", exhausted: "+((currExtendedAction == null) || currExtActI >= currExtendedAction.length - 1));
+		return ((currExtendedAction == null) || currExtActI >= currExtendedAction.length - 1)
+				|| callCoreAgentEveryStep;
+		//second part needs to be length - 1 because upon stepping it will ++ and become length
+		//at which point it would then overflow and request a new extended action
+	}
 }

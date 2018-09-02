@@ -351,7 +351,8 @@ public class TamerRLAgent extends GeneralAgent implements AgentInterface {
     	this.stepStartTime = startTime;
     	this.stepStartHelper(r, o);
     	//System.out.println("TAMERRL this.stepStartTime: " + String.format("%f", this.stepStartTime));
-    	tamerAgent.hRewList = new ArrayList<HRew>(this.hRewThisStep);
+//    	tamerAgent.hRewList = new ArrayList<HRew>(this.hRewThisStep);
+    	tamerAgent.setNRewList("hRew", this.hRewThisStep, true);
     	this.hInf.recordTimeStepEnd(startTime);
     	
     	//if (this.stepsThisEp > 1) {
@@ -434,7 +435,8 @@ public class TamerRLAgent extends GeneralAgent implements AgentInterface {
     	this.stepStartTime = time;
 //    	System.out.println("\n\nEpisode end");
     	this.endHelper(r);
-    	tamerAgent.hRewList = new ArrayList<HRew>(this.hRewThisStep);
+//    	tamerAgent.hRewList = new ArrayList<HRew>(this.hRewThisStep);
+    	tamerAgent.setNRewList("hRew", this.hRewThisStep, true);
     	double manipulatedR = this.getManipulatedRew(r, null);
     	this.hInf.episodeEndUpdate();
     	if (this.COMBINATION_METHOD != RL_ONLY)

@@ -401,7 +401,8 @@ public class AsynchDPAgent extends GeneralAgent {
     	/*
     	 * TAMER UPDATE
     	 */
-    	tamerAgent.hRewList = new ArrayList<HRew>(this.hRewThisStep);
+//    	tamerAgent.hRewList = new ArrayList<HRew>(this.hRewThisStep);
+    	tamerAgent.setNRewList("hRew", this.hRewThisStep, true);
     	if (this.stepsThisEp > 1) {
     		this.currObsAndAct.setAct(new Action()); // sending an empty action instead of a null one to avoid the comp. cost of an extra action selection. OK b/c TamerAgent's apparent action isn't used for update if !tamerAgent.isTopLevelAgent. 
        		tamerAgent.agent_step(r, o, this.stepStartTime, this.currObsAndAct.getAct());
@@ -480,7 +481,8 @@ public class AsynchDPAgent extends GeneralAgent {
     	/*
     	 * TAMER UPDATE
     	 */
-    	tamerAgent.hRewList = new ArrayList<HRew>(this.hRewThisStep);
+//    	tamerAgent.hRewList = new ArrayList<HRew>(this.hRewThisStep);
+    	tamerAgent.setNRewList("hRew", this.hRewThisStep, true);
     	this.tamerAgent.agent_end(r, time);
     }
     

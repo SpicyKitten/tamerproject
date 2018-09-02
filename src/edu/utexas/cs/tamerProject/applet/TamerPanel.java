@@ -132,7 +132,7 @@ public class TamerPanel extends RLPanel {
 		g2d.setComposite(originalComposite);
 	}
 
-	public void keyPressed( KeyEvent e ) {
+	public void keyTyped( KeyEvent e ) {
 		//		if (!runLocal.expInitialized) { // when the experiment has not been initialized, the other key responses could cause problems
 		//			if (e.getKeyChar() == '2'){
 		//				startPressed = true;
@@ -152,7 +152,7 @@ public class TamerPanel extends RLPanel {
 		if (e.getKeyCode() == KeyEvent.VK_LEFT)
 			e.setKeyChar('j');
 
-		super.keyPressed(e);
+		super.keyTyped(e);
 		sendKeyToAgent(e.getKeyChar());
 
 		//System.out.println("key pressed in TamerPanel: " + e.getKeyChar());

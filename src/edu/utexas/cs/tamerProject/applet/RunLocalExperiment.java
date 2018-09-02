@@ -1,30 +1,26 @@
 package edu.utexas.cs.tamerProject.applet;
 
-import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Observable;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 import javax.swing.SwingUtilities;
 
-import org.rlcommunity.rlglue.codec.LocalGlue;
-import org.rlcommunity.rlglue.codec.RLGlue;
+// AGENTS
+import org.rlcommunity.agents.random.RandomAgent;
+import org.rlcommunity.environments.cartpole.CartPole;
 import org.rlcommunity.rlglue.codec.AgentInterface;
 import org.rlcommunity.rlglue.codec.EnvironmentInterface;
+import org.rlcommunity.rlglue.codec.LocalGlue;
+import org.rlcommunity.rlglue.codec.RLGlue;
+
+import edu.utexas.cs.tamerProject.logger.Log;
 //import rlVizLib.general.TinyGlue;
 import edu.utexas.cs.tamerProject.glue.TinyGlueExtended;
 import edu.utexas.cs.tamerProject.utils.Stopwatch;
-
-// AGENTS
-import org.rlcommunity.agents.random.RandomAgent;
-
-// ENVIRONMENTS
-import org.rlcommunity.environments.tetris.Tetris;
-import org.rlcommunity.environments.mountaincar.MountainCar;
-import org.rlcommunity.environments.cartpole.CartPole;
 //import org.rlcommunity.environments.acrobot.Acrobot;
 
 
@@ -71,7 +67,8 @@ public class RunLocalExperiment extends Observable{
 	double avgSteps = 0.0;
 	double avgReturn = 0.0;
 	private double returnThisEp = 0.0;
-	
+	private static final Log log = new Log(//edit these values as desired (class, Level, less trace information)
+			RunLocalExperiment.class, Level.FINE, Log.Simplicity.HIGH);//basic logging functionality
 
 	
 	public void init() {
@@ -108,7 +105,7 @@ public class RunLocalExperiment extends Observable{
 	    //System.out.println("hashcode for glue: " + glue.getClass().hashCode());
 	    //System.out.println("Glue class from: " + glue.getClass().getProtectionDomain().getCodeSource().getLocation());
 		glue.setAgentEnvSteps(true);
-		System.out.println("just called setAgentEnvSteps()");
+		log.log(Level.INFO,"just called setAgentEnvSteps()");
 		
 		expStopwatch = new Stopwatch();
 		expStopwatch.startTimer();
@@ -119,10 +116,10 @@ public class RunLocalExperiment extends Observable{
 	 * Initialize the experiment.
 	 */
 	public void initExp(){
-		System.out.println("\nInit experiment\n");
+		log.log(Level.INFO,"\nInit experiment\n");
 		this.rlNumSteps = new int[numEpisodes];
 		this.rlReturn = new double[numEpisodes];
-		System.out.println("Running: " + numEpisodes + 
+		log.log(Level.INFO,"Running: " + numEpisodes + 
 					" with a cutoff each of: " + maxStepsPerEpisode + " steps.");
 		RLGlue.RL_init();
 		//startExp();
@@ -230,9 +227,10 @@ public class RunLocalExperiment extends Observable{
 //		System.out.println("glue.getTimeStep(): " + glue.getTimeStep());
 //		System.out.println("glue.getReturnThisEpisode(): " + glue.getReturnThisEpisode());
 		if (endOfEp) {
-			System.out.print(".");
-			System.out.print("Episode " + epNum + " finished. ");
-			System.out.println("\t Steps: "+ glue.getTimeStep()); 
+			StringBuilder sb = new StringBuilder(".");
+			sb.append("Episode " + epNum + " finished. ");
+			sb.append("\t Steps: "+ glue.getTimeStep());
+			log.log(Level.INFO,sb.toString());
 			rlNumSteps[epNum - 1] = glue.getTimeStep();
 			rlReturn[epNum - 1] = glue.getReturnThisEpisode();
 			if (epNum == numEpisodes) {expFinished = true;}
@@ -240,7 +238,7 @@ public class RunLocalExperiment extends Observable{
 				double returnSum = 0;
 				for (int i = (epNum - 1) - 19 ; i <= (epNum - 1); i++ ) {returnSum += rlReturn[i];}
 				double meanReturn = returnSum / 20;
-				System.out.println("Mean reward per ep over last 20 eps: " + meanReturn);
+				log.log(Level.INFO,"Mean reward per ep over last 20 eps: " + meanReturn);
 			}
 		}
 		if (totalSteps == maxTotalSteps || glue.getTimeStep() >= finishExpIfNumStepsInOneEp) 

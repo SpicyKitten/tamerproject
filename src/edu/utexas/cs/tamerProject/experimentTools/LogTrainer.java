@@ -143,7 +143,8 @@ public class LogTrainer{
 		if (agent.totalSteps % 1000 == 0)
 			System.out.print(agent.totalSteps);
 	
-		agent.hRewList = step.hRewList;
+//		agent.hRewList = step.hRewList;
+		agent.setNRewList("hRew", step.hRewList);
 		if (step.training != agent.getInTrainSess())
 			agent.toggleInTrainSess();			
 		//if (agent.inTrainSess)
