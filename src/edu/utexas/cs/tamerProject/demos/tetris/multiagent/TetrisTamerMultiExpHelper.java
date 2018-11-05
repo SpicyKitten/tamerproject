@@ -27,6 +27,7 @@ import edu.utexas.cs.tamerProject.actSelect.ActionSelect;
 import edu.utexas.cs.tamerProject.agents.GeneralAgent;
 import edu.utexas.cs.tamerProject.agents.mtamer.MoralTamerAgent;
 import edu.utexas.cs.tamerProject.agents.mtamer.proxy.HumanProxy;
+import edu.utexas.cs.tamerProject.agents.mtamer.proxy.MoralProxy;
 import edu.utexas.cs.tamerProject.agents.mtamer.proxy.function.tetris.TetrisFunctionFactory;
 import edu.utexas.cs.tamerProject.agents.mtamer.trackable.TableTrackable;
 import edu.utexas.cs.tamerProject.agents.rotation.RotationAgent;
@@ -201,7 +202,7 @@ public class TetrisTamerMultiExpHelper extends GeneralExperiment {
 		{
 			System.out.println(g.getClass().getSimpleName());
 		}
-		HumanProxy proxy = new HumanProxy(agents, evals, factory.transitionFunc());
+		MoralProxy proxy = new MoralProxy(agents, evals, factory.transitionFunc());
 		String filterName = "global";
 		if(!getArgument(args, "-filter").equals(""))
 			filterName = getArgument(args, "-filter");
