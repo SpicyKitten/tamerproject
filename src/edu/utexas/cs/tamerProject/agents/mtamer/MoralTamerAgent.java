@@ -46,7 +46,8 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 	 */
 	public HLearner mLearner;
 	public ArrayList<HRew> mRewThisStep;
-	public HumanProxy proxy;
+	public HumanProxy m_proxy;
+	public HumanProxy v_proxy;
 	public FeatGenerator moralFeatGen;
 	public Consumer<Double> alternativeMoralPipe = null;
 	
@@ -214,7 +215,7 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 		}
 		//log a moral reward for the done action
 		if(moralRewards != null) log.log(Level.FINE,String.format("MPredict: [%f]", moralRewards.get(this.currObsAndAct.getAct())));
-		double feedback = this.proxy.notify(this, o, this.currObsAndAct.getAct());
+		double feedback = this.m_proxy.notify(this, o, this.currObsAndAct.getAct());
 		Map<String, Object> params = new HashMap<>();
 		params.put("episode reward", r);
 		params.put("moral rewards", moralRewards);
@@ -324,8 +325,15 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 	}
 
 	@Override
-	public void setProxy(HumanProxy proxy) {
-		this.proxy = proxy;
+	public void setProxy(HumanProxy proxy, ProxyType type)
+	{
+		switch(type)
+		{
+		case MORAL:
+			this.m_proxy = proxy; break;
+		case VALUE:
+			this.v_proxy = proxy; break;
+		}
 	}
 }
 
