@@ -22,6 +22,7 @@ import edu.utexas.cs.tamerProject.agents.GeneralAgent;
 import edu.utexas.cs.tamerProject.agents.HLearner;
 import edu.utexas.cs.tamerProject.agents.mtamer.moral.MoralAgent;
 import edu.utexas.cs.tamerProject.agents.mtamer.proxy.HumanProxy;
+import edu.utexas.cs.tamerProject.agents.mtamer.proxy.ProxyType;
 import edu.utexas.cs.tamerProject.agents.mtamer.trackable.TableTrackable;
 import edu.utexas.cs.tamerProject.agents.tamer.HRew;
 import edu.utexas.cs.tamerProject.agents.tamer.TamerAgent;

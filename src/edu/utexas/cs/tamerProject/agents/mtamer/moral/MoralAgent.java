@@ -4,8 +4,8 @@ import java.util.ArrayList;
 
 import edu.utexas.cs.tamerProject.agents.mtamer.MRew;
 import edu.utexas.cs.tamerProject.agents.mtamer.proxy.HumanProxy;
+import edu.utexas.cs.tamerProject.agents.mtamer.proxy.ProxyType;
 import edu.utexas.cs.tamerProject.agents.tamer.HRew;
-import edu.utexas.cs.tamerProject.featGen.FeatGenerator;
 import edu.utexas.cs.tamerProject.utils.Stopwatch;
 
 public interface MoralAgent 
@@ -30,10 +30,4 @@ public interface MoralAgent
 	public abstract double moralFeedbackValue();
 	public abstract double immoralFeedbackValue();
 	public abstract void setProxy(HumanProxy proxy, ProxyType type);
-	public static final ProxyType MORAL = ProxyType.MORAL;
-	public static final ProxyType VALUE = ProxyType.VALUE;
-	public static enum ProxyType
-	{
-		MORAL, VALUE;
-	}
 }

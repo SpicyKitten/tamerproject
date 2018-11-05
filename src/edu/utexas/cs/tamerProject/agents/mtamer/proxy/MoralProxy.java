@@ -3,14 +3,8 @@ package edu.utexas.cs.tamerProject.agents.mtamer.proxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Vector;
 import java.util.function.BiFunction;
-import java.util.function.Supplier;
 
-import javax.imageio.ImageIO;
-import javax.swing.text.html.HTMLDocument.HTMLReader.BlockAction;
-
-import org.rlcommunity.environments.tetris.TetrisPiece;
 import org.rlcommunity.environments.tetris.TetrisState;
 import org.rlcommunity.rlglue.codec.types.Action;
 import org.rlcommunity.rlglue.codec.types.Observation;
@@ -43,7 +37,7 @@ public class MoralProxy implements HumanProxy
 		evaluators.forEach(evalFunctions::add);
 		assert evalFunctions.size() == 1 : "Incorrect number of evaluation functions provided!";
 		transitionFunction = mapping;
-		((MoralAgent)generalAgent).setProxy(this, MoralAgent.MORAL);
+		((MoralAgent)generalAgent).setProxy(this, ProxyType.MORAL);
 		myAgents = new ArrayList<>();
 		myAgents.add(generalAgent);
 		agent_index = 0;
@@ -70,7 +64,7 @@ public class MoralProxy implements HumanProxy
 		assert evalFunctions.size() == agents.size() : "Incorrect number of evaluation functions provided!";
 		transitionFunction = mapping;
 		for(GeneralAgent generalAgent : agents)
-			((MoralAgent)generalAgent).setProxy(this, MoralAgent.MORAL);
+			((MoralAgent)generalAgent).setProxy(this, ProxyType.MORAL);
 		myAgents = new ArrayList<>(agents);
 		agent_index = 0;
 	}
