@@ -7,12 +7,12 @@ import org.rlcommunity.rlglue.codec.types.Observation;
 
 import edu.utexas.cs.tamerProject.agents.mtamer.proxy.function.EnvironmentFunctionFactory;
 
-public class TetrisFunctionFactory extends EnvironmentFunctionFactory
+public class TetrisEfficiencyFunctionFactory extends EnvironmentFunctionFactory
 {
-	public TetrisFunctionFactory()
+	public TetrisEfficiencyFunctionFactory()
 	{
 		this.addConstructor("transition", TetrisTransitionFactory::new);
-		this.addConstructor("evaluation", varArgs(TetrisEvaluationFactory::new));
+		this.addConstructor("evaluation", varArgs(TetrisEfficiencyFactory::new));
 		//this.addConstructor("empty_evaluation", noArgs(TetrisEvaluationFactory::new));
 	}
 	

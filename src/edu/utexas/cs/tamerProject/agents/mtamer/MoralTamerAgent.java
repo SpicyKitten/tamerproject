@@ -60,7 +60,7 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 		GeneralAgent.agent_init(taskSpec, this);
 		this.setMoralFeatGen(param("moralFeatClass"));
 		//// CREATE CreditAssignParamVec
-		CreditAssignParamVec credAssignParams = new CreditAssignParamVec(this.params.distClass, this.params.creditDelay,
+		CreditAssignParamVec credAssignParams = new CreditAssignParamVec("immediate", this.params.creditDelay,
 				this.params.windowSize, this.params.extrapolateFutureRew, this.params.delayWtedIndivRew,
 				this.params.noUpdateWhenNoRew);
 		//// INITIALIZE TAMER
@@ -217,8 +217,12 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 		//log a moral reward for the done action
 		if(moralRewards != null) log.log(Level.FINE,String.format("MPredict: [%f]", moralRewards.get(this.currObsAndAct.getAct())));
 		double feedback = this.m_proxy.notify(this, o, this.currObsAndAct.getAct());
+		double efficiency = 0;
+//		if(this.v_proxy != null)
+			efficiency = this.v_proxy.notify(this, o, this.currObsAndAct.getAct());
 		Map<String, Object> params = new HashMap<>();
 		params.put("episode reward", r);
+		params.put("episode feedback", efficiency);
 		params.put("moral rewards", moralRewards);
 		params.put("moral feedback", feedback);
 		this.updateHistory(params);
@@ -267,6 +271,10 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 	
 	public void receiveKeyInput(char c)
 	{
+		if((c == 'z' || c == 'Z' || c == '/' || c == '?') && this.v_proxy != null)
+			return;
+		if((c == 'x' || c == 'X' || c == '.' || c == '>') && this.m_proxy != null)
+			return;
 		super.receiveKeyInput(c);
 		if(c == 'x' || c == 'X')
 			this.addMRew(Feedback.IMMORAL);//x for immoral

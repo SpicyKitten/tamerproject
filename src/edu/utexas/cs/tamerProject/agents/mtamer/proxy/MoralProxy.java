@@ -13,7 +13,7 @@ import edu.utexas.cs.tamerProject.agents.GeneralAgent;
 import edu.utexas.cs.tamerProject.agents.mtamer.MoralTamerAgent;
 import edu.utexas.cs.tamerProject.agents.mtamer.moral.MoralAgent;
 import edu.utexas.cs.tamerProject.agents.mtamer.proxy.filter.MoralFilter;
-import edu.utexas.cs.tamerProject.agents.mtamer.proxy.function.tetris.TetrisFunctionFactory;
+import edu.utexas.cs.tamerProject.agents.mtamer.proxy.function.tetris.TetrisMoralFunctionFactory;
 import edu.utexas.cs.tamerProject.agents.rotation.RotationAgent;
 
 public class MoralProxy implements HumanProxy
@@ -147,7 +147,7 @@ public class MoralProxy implements HumanProxy
 	
 	public static void main(String[] args)
 	{
-		TetrisFunctionFactory factory = new TetrisFunctionFactory();
+		TetrisMoralFunctionFactory factory = new TetrisMoralFunctionFactory();
 		Collection<BiFunction<Observation, Observation, Double>> evals = new ArrayList<>();
 		int[][][] evalParams = new int[][][] 
 				{

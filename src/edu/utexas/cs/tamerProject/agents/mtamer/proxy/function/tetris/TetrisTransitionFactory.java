@@ -7,7 +7,7 @@ import org.rlcommunity.rlglue.codec.types.Observation;
 
 import edu.utexas.cs.tamerProject.agents.mtamer.proxy.function.TransitionFactory;
 
-public class TetrisTransitionFactory implements TransitionFactory
+class TetrisTransitionFactory implements TransitionFactory
 {
 	public TetrisTransitionFactory() {}
 	

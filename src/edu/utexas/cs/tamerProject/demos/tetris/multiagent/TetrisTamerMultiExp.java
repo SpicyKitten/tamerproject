@@ -37,9 +37,9 @@ public class TetrisTamerMultiExp extends TamerApplet{
 		//moralNoEfficiency = {moral:true}, @Human: don't give efficiency feedback
 		String moral = new String[]{"false","true"}[1];
 		String filter = new String[]{"fixed","global","relative","simple"}[2];
-		String meld = new String[]{"false","true"}[0];
-		String negativeValue = (Double.valueOf(-5)).toString();
-		String positiveValue = (Double.valueOf(5)).toString();
+		String meld = new String[]{"false","true"}[1];
+		String negativeValue = (Double.valueOf(0)).toString();
+		String positiveValue = (Double.valueOf(0)).toString();
 		String pipe = new String[]{"false","true"}[0];
 		//DONE: implement piping moral rewards into efficiency channel (yikes)
 		String[] args = new String[] { "-moral", moral,

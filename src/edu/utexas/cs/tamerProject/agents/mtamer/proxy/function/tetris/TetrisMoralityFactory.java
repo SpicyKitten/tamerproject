@@ -7,19 +7,19 @@ import org.rlcommunity.rlglue.codec.types.Observation;
 
 import edu.utexas.cs.tamerProject.agents.mtamer.proxy.function.EvaluationFactory;
 
-public class TetrisEvaluationFactory implements EvaluationFactory
+class TetrisMoralityFactory implements EvaluationFactory
 {
 	private int[][] evals;
 	private int[] weights;
 	private int worldWidth;
 	private int worldHeight;
-	public TetrisEvaluationFactory(Object... objs) 
+	public TetrisMoralityFactory(Object... objs) 
 	{
 		this((int[][])objs[0], (int[])objs[1], (int)objs[2], (int)objs[3]);
 		System.out.println("Made TetrisEvaluationFactory with params:");
 		System.out.println(Arrays.toString(objs));
 	}
-	public TetrisEvaluationFactory(int[][] details, int[] wts, int ww, int wh)
+	public TetrisMoralityFactory(int[][] details, int[] wts, int ww, int wh)
 	{
 		evals = details;
 		worldWidth = ww;

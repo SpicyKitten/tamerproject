@@ -28,7 +28,9 @@ import edu.utexas.cs.tamerProject.agents.GeneralAgent;
 import edu.utexas.cs.tamerProject.agents.mtamer.MoralTamerAgent;
 import edu.utexas.cs.tamerProject.agents.mtamer.proxy.HumanProxy;
 import edu.utexas.cs.tamerProject.agents.mtamer.proxy.MoralProxy;
-import edu.utexas.cs.tamerProject.agents.mtamer.proxy.function.tetris.TetrisFunctionFactory;
+import edu.utexas.cs.tamerProject.agents.mtamer.proxy.ValueProxy;
+import edu.utexas.cs.tamerProject.agents.mtamer.proxy.function.tetris.TetrisEfficiencyFunctionFactory;
+import edu.utexas.cs.tamerProject.agents.mtamer.proxy.function.tetris.TetrisMoralFunctionFactory;
 import edu.utexas.cs.tamerProject.agents.mtamer.trackable.TableTrackable;
 import edu.utexas.cs.tamerProject.agents.rotation.RotationAgent;
 import edu.utexas.cs.tamerProject.agents.specialty.ExtActionAgentWrap;
@@ -102,7 +104,12 @@ public class TetrisTamerMultiExpHelper extends GeneralExperiment {
 		this.processArgs(args);
 		RotationAgent r = createTetrisMultiagent(args,2);
 		addTableTracer(r, args);
-		if(moralTamer)addHumanProxy(r, args);
+		if(moralTamer)
+		{
+			addHumanProxy(r, args);
+			for(GeneralAgent g : r)
+				addEfficiencyProxy((TamerAgent)((ExtActionAgentWrap)g).coreAgent);
+		}
 		return r;
 //		return createTetrisAgent(args);
 	}
@@ -180,9 +187,19 @@ public class TetrisTamerMultiExpHelper extends GeneralExperiment {
 		agents.forEach((a) -> a.setHistoryTracker(table));
 	}
 	
+	public void addEfficiencyProxy(TamerAgent t)
+	{
+		TetrisEfficiencyFunctionFactory factory = new TetrisEfficiencyFunctionFactory();
+		double[] weights = new double[46];
+		int width = 10;
+		int height = 20;
+		BiFunction<Observation, Observation, Double> efficiency = factory.evaluationFunc(width, height, weights);
+		new ValueProxy(t, efficiency, factory.transitionFunc());
+	}
+	
 	public void addHumanProxy(RotationAgent r, String[] args)
 	{
-		TetrisFunctionFactory factory = new TetrisFunctionFactory();
+		TetrisMoralFunctionFactory factory = new TetrisMoralFunctionFactory();
 		Collection<BiFunction<Observation, Observation, Double>> evals = new ArrayList<>();
 		int[][][] evalParams = new int[][][] 
 				{
