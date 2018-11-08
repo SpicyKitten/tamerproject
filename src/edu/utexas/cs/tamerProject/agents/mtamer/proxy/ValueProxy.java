@@ -47,7 +47,7 @@ public class ValueProxy implements HumanProxy
 		Observation terminal = transitionFunction.apply(initial, act);
 		//feedbackVal is the optimal eval function change
 		double feedbackVal = evalFunction.apply(initial, terminal);
-		System.out.println("Proxy value: " + feedbackVal);
+//		System.out.println("Proxy value: " + feedbackVal);
 		//reverse notify!
 		((TamerAgent)moralAgent).addHRew(feedbackVal);
 		return feedbackVal;

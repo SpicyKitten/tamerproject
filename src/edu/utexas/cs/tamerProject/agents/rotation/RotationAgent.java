@@ -47,7 +47,7 @@ public class RotationAgent extends GeneralAgent implements AgentInterface, Itera
 		' '
 	};
 	private static final Log log = new Log(//edit these values as desired (class, Level, less trace information)
-			RotationAgent.class, Level.FINE, Log.Simplicity.HIGH);//basic logging functionality
+			RotationAgent.class, Level.OFF, Log.Simplicity.HIGH);//basic logging functionality
 	
 	public RotationAgent(ParameterHolder p)
 	{

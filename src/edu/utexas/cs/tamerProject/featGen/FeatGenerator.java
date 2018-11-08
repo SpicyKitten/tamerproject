@@ -68,7 +68,7 @@ public abstract class FeatGenerator{
 	public void setFeatSource(String source) {
 		this.featSource = source;
 	}
-
+	public static void setStaticSeed(long seed) { FeatGenerator.staticRandGenerator = new Random(seed); }
 	public void setRandSeed(long seed) {FeatGenerator.staticRandGenerator = new Random(seed);}
 	public int getNumFeatures() {return this.numFeatures;}
 	public abstract int[] getActionFeatIndices(); // when applicable, this tells which features in the returned double[] indicate the action taken

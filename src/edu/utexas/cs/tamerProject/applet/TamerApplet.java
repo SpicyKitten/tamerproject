@@ -365,6 +365,8 @@ public class TamerApplet extends RLApplet {
 	}
 
 	public void saveExpEndStats() {
+		if (!GeneralAgent.canWriteViaPHP)
+			return;
 		String expEndStats = agent.makeEndInfoStr();
 		String msg = this.filePrefix + "-" + numInTaskSeq + ".end|"
 				+ expEndStats;
@@ -375,6 +377,8 @@ public class TamerApplet extends RLApplet {
 	}
 
 	public void saveTerminationToLog() {
+		if (!GeneralAgent.canWriteViaPHP)
+			return;
 		if (agent.getRecordRew()) { // // send reward-only log from
 									// GeneralAgent.recHandler to PHP
 			String msg = this.filePrefix + "-" + numInTaskSeq + ".rew|finished";
@@ -390,6 +394,8 @@ public class TamerApplet extends RLApplet {
 	}
 
 	private void saveFinishedState() {
+		if (!GeneralAgent.canWriteViaPHP)
+			return;
 		if (!this.hasBeenReset)
 			this.sendStringToPHP(this.filePrefix + ".state|"
 					+ this.numInTaskSeq + " ");

@@ -53,7 +53,7 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 	public Consumer<Double> alternativeMoralPipe = null;
 	
 	private static final Log log = new Log(//edit these values as desired (class, Level, less trace information)
-			MoralTamerAgent.class, Level.FINE, Log.Simplicity.HIGH);//basic logging functionality
+			MoralTamerAgent.class, Level.OFF, Log.Simplicity.HIGH);//basic logging functionality
 	
 	public void agent_init(String taskSpec)
 	{

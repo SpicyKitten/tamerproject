@@ -37,7 +37,6 @@ class TetrisEfficiencyFactory implements EvaluationFactory
 			for (int i = 0; i < NUM_FEATS; ++i) {
 				accumulator += (finalFeats[i] - initFeats[i]) * weights[i];
 			}
-			System.out.println("Efficiency proxy says: " + accumulator);
 			return accumulator;
 		};
 	}

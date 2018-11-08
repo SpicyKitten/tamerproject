@@ -58,6 +58,8 @@ public class Tetris extends EnvironmentBase implements HasAVisualizerInterface, 
     public Tetris(ParameterHolder p) {
         super();
         gameState = new TetrisState();
+        if(p.isParamSet("seed"))
+        	gameState.getRandom().setSeed(p.getIntegerParam("seed"));
     }
 
     /**

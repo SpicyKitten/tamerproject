@@ -101,7 +101,7 @@ public class MoralProxy implements HumanProxy
 		int eval_index = this.getIndex(moralAgent);
 		assert eval_index != -1 : "notify() sourced in a moral agent unknown to the current human proxy!";
 		double feedbackVal = moralFilter.apply(agent_evals, eval_index);
-		System.out.println("Proxy value: " + feedbackVal);
+//		System.out.println("Proxy value: " + feedbackVal);
 		//reverse notify!
 		if(feedbackVal >= 0)
 		{

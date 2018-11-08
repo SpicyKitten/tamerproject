@@ -342,6 +342,7 @@ public class TamerAgent extends GeneralAgent implements AgentInterface, TableTra
 				this.hLearner.credA.setInTrainSess(Stopwatch.getComparableTimeInSec(), this.inTrainSess);
 			}
 			else if (c == 'S') {
+//				System.out.println(Arrays.toString(((IncGDLinearModel)this.model).getWeights()));
 				this.model.saveDataAsArff(this.envName, (int)Stopwatch.getWallTimeInSec(), "");
 			}
 			

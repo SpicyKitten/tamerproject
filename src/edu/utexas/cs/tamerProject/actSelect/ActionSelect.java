@@ -313,7 +313,7 @@ public class ActionSelect{
 				moralValueMap.put(e.getKey(), actionValue);
 			}
 		}
-		System.out.println(moralValueMap.size() + " " + valFcnModel.getFeatGen().getPossActions(obs).size());
+		log.log(Level.FINER, "valid actions: " + moralValueMap.size() + "/" + valFcnModel.getFeatGen().getPossActions(obs).size());
 		log.log(Level.FINER,"Moral greedy has "+moralValueMap.size()+" moral actions to choose from");
 		if (moralValueMap.size() == 0) {
 			System.err.println("Defaulting to greedyActSelect");
