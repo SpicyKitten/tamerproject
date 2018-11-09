@@ -134,12 +134,12 @@ public class RunLocalExperiment extends Observable{
 		//		Arrays.toString(Thread.currentThread().getStackTrace()) + "\n");
 		if (expRunning)
 			return;
+		expRunning = true;
 		if (RunLocalExperiment.stepDurInMilliSecs < 1)
 			startExpTopSpeed();
 		else {
 			startExpTimer();
 		}
-		expRunning = true;
 	}
 	/*
 	 * Time steps with regular intervals

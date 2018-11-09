@@ -17,7 +17,10 @@ public class TetrisTamerMultiExp extends TamerApplet{
 		if(this.rlPanel != null)
 			super.update(observable, obj);
 		else
+		{
+			//do something
 			System.exit(0);
+		}
 	}
 
 	GeneralExperiment exp;
@@ -49,7 +52,7 @@ public class TetrisTamerMultiExp extends TamerApplet{
 		//moralNoEfficiency = {moral:true}, @Human: don't give efficiency feedback
 		String moral = new String[]{"false","true"}[1];
 		String filter = new String[]{"fixed","global","relative","simple"}[2];
-		String meld = new String[]{"false","true"}[1];
+		String meld = new String[]{"false","true"}[0];
 		String negativeValue = (Double.valueOf(0)).toString();
 		String positiveValue = (Double.valueOf(0)).toString();
 		String pipe = new String[]{"false","true"}[0];
@@ -71,7 +74,7 @@ public class TetrisTamerMultiExp extends TamerApplet{
 		 * Set experimental parameters
 		 */
 		RunLocalExperiment.stepDurInMilliSecs = 0;
-		RunLocalExperiment.numEpisodes = 1;
+		RunLocalExperiment.numEpisodes = 10;
 		RLPanel.DISPLAY_SECONDS_FOR_TIME = true;
 		RLPanel.DISPLAY_REW_THIS_EP = true;
 		RLPanel.PRINT_REW_AS_INT = true;
@@ -79,7 +82,8 @@ public class TetrisTamerMultiExp extends TamerApplet{
 		RLPanel.enableSpeedControls = true;
 		RLPanel.enableSingleStepControl = false;
 		
-		this.trainerUnique = "my little 5";
+		//prevent unnecessary crashing
+		this.trainerUnique = "unique Tetris: 1";
 		
 		super.initPanel();
 	}
