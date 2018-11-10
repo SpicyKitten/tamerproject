@@ -1,6 +1,7 @@
 package edu.utexas.cs.tamerProject.demos.tetris.multiagent;
 
 import java.awt.BorderLayout;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -26,7 +28,6 @@ import org.rlcommunity.rlglue.codec.types.Observation;
 import edu.utexas.cs.tamerProject.actSelect.ActionSelect;
 import edu.utexas.cs.tamerProject.agents.GeneralAgent;
 import edu.utexas.cs.tamerProject.agents.mtamer.MoralTamerAgent;
-import edu.utexas.cs.tamerProject.agents.mtamer.proxy.HumanProxy;
 import edu.utexas.cs.tamerProject.agents.mtamer.proxy.MoralProxy;
 import edu.utexas.cs.tamerProject.agents.mtamer.proxy.ValueProxy;
 import edu.utexas.cs.tamerProject.agents.mtamer.proxy.function.tetris.TetrisEfficiencyFunctionFactory;
@@ -57,6 +58,7 @@ public class TetrisTamerMultiExpHelper extends GeneralExperiment {
 
 	static boolean debug = true;
 	public final String expPrefix = "tetriszamsterdam";
+	private JTable _data = null;
 	
 	/*
 	 * Hard-coding indices for args String (this might be removed eventually)
@@ -120,6 +122,32 @@ public class TetrisTamerMultiExpHelper extends GeneralExperiment {
 		h.createAgent(new String[] { "-moral", "true" }, null);
 	}
 	
+	public void write(File file) {
+        try {
+            PrintWriter os = new PrintWriter(file);
+            for (int col = 0; col < _data.getColumnCount(); col++) {
+                os.print(_data.getColumnName(col) + ",");
+            }
+            os.println("\r");
+            StringBuilder s = new StringBuilder();
+//            int[] offsets = finalMoralTamer ? new int[] {0, 2, 2, 3, 2} : new int[] {0, 2, 2};
+            for (int i = 0; i < _data.getRowCount(); i++) {
+            	s.setLength(0);
+                for (int j = 0; j < _data.getColumnCount(); j++) {
+//                	for(int k = 0; k < offsets[j]; ++k)
+//                		s.append("\t");
+                	if(j != 0)
+                		s.append(",");
+                	s.append(_data.getValueAt(i, j));
+                }
+                os.println(s.toString());
+            }
+            os.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+	
 	public void addTableTracer(RotationAgent r, String[] args)
 	{
 		boolean moralTamer = false;
@@ -148,35 +176,14 @@ public class TetrisTamerMultiExpHelper extends GeneralExperiment {
 			}
 		});
 		fileChooser.setAcceptAllFileFilterUsed(false);
+		
+		_data = table;
 		saveButton.addActionListener((ae) -> {
 			int returnVal = fileChooser.showSaveDialog(frame);
-		    if (returnVal == JFileChooser.APPROVE_OPTION) {
-		        try {
-		            File file = fileChooser.getSelectedFile();
-		            PrintWriter os = new PrintWriter(file);
-		            for (int col = 0; col < table.getColumnCount(); col++) {
-		                os.print(table.getColumnName(col) + ",");
-		            }
-		            os.println("\r");
-		            StringBuilder s = new StringBuilder();
-//		            int[] offsets = finalMoralTamer ? new int[] {0, 2, 2, 3, 2} : new int[] {0, 2, 2};
-		            for (int i = 0; i < table.getRowCount(); i++) {
-		            	s.setLength(0);
-		                for (int j = 0; j < table.getColumnCount(); j++) {
-//		                	for(int k = 0; k < offsets[j]; ++k)
-//		                		s.append("\t");
-		                	if(j != 0)
-		                		s.append(",");
-		                	s.append(table.getValueAt(i, j));
-		                }
-		                os.println(s.toString());
-		            }
-		            os.close();
-		        } catch (IOException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-		        }
-		    }
+			if (returnVal == JFileChooser.APPROVE_OPTION) {
+				File file = fileChooser.getSelectedFile();
+				write(file);
+			}
 		});
 		frame.add(pane, BorderLayout.CENTER);
 		frame.add(saveButton, BorderLayout.SOUTH);
@@ -190,7 +197,10 @@ public class TetrisTamerMultiExpHelper extends GeneralExperiment {
 	public void addEfficiencyProxy(TamerAgent t)
 	{
 		TetrisEfficiencyFunctionFactory factory = new TetrisEfficiencyFunctionFactory();
-		double[] weights = {1.8647976524653612E-4, 4.7699817864523865E-4, 5.761317393684146E-4, 0.0012960048535114951, 0.001175888205670327, 5.604779944838809E-4, 4.585432630056264E-4, 3.3130744387274306E-4, -2.984269223413989E-4, -1.1662245468439961E-4, 0.001222582331859393, -2.769279666844568E-4, -6.184254202017794E-5, -8.959692239557676E-4, -1.4702876999442911E-4, -4.269928915542799E-4, -1.3722928538289147E-4, -1.1422510264924284E-4, -5.716152059649105E-4, -2.2125605735739628E-4, -9.583969996364789E-4, -3.3416610252028593E-4, -3.9481478842386895E-4, 1.8295156437545444E-5, 1.2428429595175925E-4, 1.4597629244831911E-4, 3.1796239523091487E-4, 2.650147179355084E-4, 1.3229965490506903E-4, 1.171540902831774E-4, 9.831050852152286E-5, -1.0744284010047433E-4, -6.4823910416021E-5, 2.4962784900877646E-4, -0.0025516097364202085, -0.0021632982353273164, -0.012960887058589412, -0.0041878515423978665, -0.0035993262726473634, -7.045685151198493E-4, -0.0012835947045794888, -0.003448266938856314, -0.0018512506084857315, -0.014974063311022518, -0.002818467430309881, -0.005070634639744364};
+		//optimizes efficiency
+//		double[] weights = {1.8647976524653612E-4, 4.7699817864523865E-4, 5.761317393684146E-4, 0.0012960048535114951, 0.001175888205670327, 5.604779944838809E-4, 4.585432630056264E-4, 3.3130744387274306E-4, -2.984269223413989E-4, -1.1662245468439961E-4, 0.001222582331859393, -2.769279666844568E-4, -6.184254202017794E-5, -8.959692239557676E-4, -1.4702876999442911E-4, -4.269928915542799E-4, -1.3722928538289147E-4, -1.1422510264924284E-4, -5.716152059649105E-4, -2.2125605735739628E-4, -9.583969996364789E-4, -3.3416610252028593E-4, -3.9481478842386895E-4, 1.8295156437545444E-5, 1.2428429595175925E-4, 1.4597629244831911E-4, 3.1796239523091487E-4, 2.650147179355084E-4, 1.3229965490506903E-4, 1.171540902831774E-4, 9.831050852152286E-5, -1.0744284010047433E-4, -6.4823910416021E-5, 2.4962784900877646E-4, -0.0025516097364202085, -0.0021632982353273164, -0.012960887058589412, -0.0041878515423978665, -0.0035993262726473634, -7.045685151198493E-4, -0.0012835947045794888, -0.003448266938856314, -0.0018512506084857315, -0.014974063311022518, -0.002818467430309881, -0.005070634639744364};
+		//for morality only
+		double[] weights = new double[46];
 		int width = 10;
 		int height = 20;
 		BiFunction<Observation, Observation, Double> efficiency = factory.evaluationFunc(width, height, weights);

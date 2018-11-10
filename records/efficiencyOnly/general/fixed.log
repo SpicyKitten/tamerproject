@@ -1,0 +1,134 @@
+Warning: Applet API and AppletViewer are deprecated.
+setting to size: 150, 300
+size before in RLApplet.init(): 150, 300
+size after in RLApplet.init(): 150, 300
+rlpanel size after in RLApplet.init(): 150, 300
+
+[------process pre-init args------] [-moral, true, -filter, fixed, -meld, true, 0.0, 0.0, -pipe, false, 0.0, 0.0]
+Created 2 agents
+***in getParams(), agentClassName: edu.utexas.cs.tamerProject.agents.rotation.RotationAgent
+Default enableGUI: false
+***in getParams(), agentClassName: edu.utexas.cs.tamerProject.agents.specialty.ExtActionAgentWrap
+***in getParams(), agentClassName: edu.utexas.cs.tamerProject.agents.mtamer.MoralTamerAgent
+Tetris Agent Parameters:;log=edu.utexas.cs.tamerProject.logger.Log@4567d8b1;featClass=None;featGenParams={basisFcnsPerDim=41, relWidth=0.062, biasFeatVal=0.1, numBinsPerDim=10};moralFeatClass=None;modelClass=None;initModelWSamples=false;initSampleValue=0.0;numBiasingSamples=0;biasSampleWt=0.5;initWtsValue=0.0;modelAddsBiasFeat=false;wekaModelName=;stepSize=0.05;traceType=replacing;traceDecayFactor=0.0;safeAction=null;selectionMethod=e-greedy;selectionParams={epsilon=0.03, exhaustiveSearchDepth=1, greedyLeafPathLength=0, epsilonAnnealRate=0.9995, treeSearch=false, randomizeSearchDepth=true};envTransModel=null;envRewModel=null;distClass=uniform;creditDelay=0.2;windowSize=0.6;extrapolateFutureRew=true;delayWtedIndivRew=false;noUpdateWhenNoRew=false;hInflParams={}
+
+
+[------Process pre-init args in MoralTamerAgent------] [-moral, true, -filter, fixed, -meld, true, 0.0, 0.0, -pipe, false, 0.0, 0.0]
+***in getParams(), agentClassName: edu.utexas.cs.tamerProject.agents.specialty.ExtActionAgentWrap
+***in getParams(), agentClassName: edu.utexas.cs.tamerProject.agents.mtamer.MoralTamerAgent
+Tetris Agent Parameters:;log=edu.utexas.cs.tamerProject.logger.Log@4567d8b1;featClass=None;featGenParams={basisFcnsPerDim=41, relWidth=0.062, biasFeatVal=0.1, numBinsPerDim=10};moralFeatClass=None;modelClass=None;initModelWSamples=false;initSampleValue=0.0;numBiasingSamples=0;biasSampleWt=0.5;initWtsValue=0.0;modelAddsBiasFeat=false;wekaModelName=;stepSize=0.05;traceType=replacing;traceDecayFactor=0.0;safeAction=null;selectionMethod=e-greedy;selectionParams={epsilon=0.03, exhaustiveSearchDepth=1, greedyLeafPathLength=0, epsilonAnnealRate=0.9995, treeSearch=false, randomizeSearchDepth=true};envTransModel=null;envRewModel=null;distClass=uniform;creditDelay=0.2;windowSize=0.6;extrapolateFutureRew=true;delayWtedIndivRew=false;noUpdateWhenNoRew=false;hInflParams={}
+
+
+[------Process pre-init args in MoralTamerAgent------] [-moral, true, -filter, fixed, -meld, true, 0.0, 0.0, -pipe, false, 0.0, 0.0]
+Made TetrisEvaluationFactory with params:
+[[[I@2298efbc, [I@64470dd7, 10, 20]
+Made TetrisEvaluationFactory with params:
+[[[I@398b7a40, [I@64470dd7, 10, 20]
+ExtActionAgentWrap
+ExtActionAgentWrap
+agent: edu.utexas.cs.tamerProject.agents.rotation.RotationAgent@7018a1b5
+agent.getRecordLog(): true
+agent.getRecordRew(): true
+
+End of TamerApplet.initPanel()
+
+
+End of init()
+
+Version of TamerApplet: 
+just called setAgentEnvSteps()
+runLocal: edu.utexas.cs.tamerProject.applet.RunLocalExperiment@c652f44
+Setting parentPanel to TamerPanel
+
+Init experiment
+
+Running: 10 with a cutoff each of: 100000 steps.
+
+----Agent edu.utexas.cs.tamerProject.agents.mtamer.MoralTamerAgent is being initialized.----
+Task specification string: VERSION RL-Glue-3.0 PROBLEMTYPE episodic DISCOUNTFACTOR 1.0 OBSERVATIONS INTS (200 0 1)  (0 1)  (0 7)  (0 4)  (0 9)  (0 19)  (20 20)  (10 10)  (0 3)  ACTIONS INTS (0 4)  REWARDS (0.0 8.0)  EXTRA EnvName:Tetris HEIGHT:20 WIDTH:10 Revision: null
+Environment name: Tetris
+params: ;log=edu.utexas.cs.tamerProject.logger.Log@4567d8b1;featClass=FeatGen_Tetris;featGenParams={basisFcnsPerDim=41, relWidth=0.062, biasFeatVal=0.1, numBinsPerDim=10};moralFeatClass=MoralFeatGen_Tetris;modelClass=IncGDLinearModel;initModelWSamples=false;initSampleValue=0.0;numBiasingSamples=0;biasSampleWt=0.1;initWtsValue=0.0;modelAddsBiasFeat=true;wekaModelName=;stepSize=1.0638297872340426E-7;traceType=replacing;traceDecayFactor=0.0;safeAction=null;selectionMethod=greedy;selectionParams={epsilon=0.03, exhaustiveSearchDepth=1, greedyLeafPathLength=0, epsilonAnnealRate=0.9995, treeSearch=false, randomizeSearchDepth=true};envTransModel=null;envRewModel=null;distClass=previousStep;creditDelay=0.2;windowSize=0.6;extrapolateFutureRew=false;delayWtedIndivRew=false;noUpdateWhenNoRew=false;hInflParams={}
+Creating feature generation class FeatGen_Tetris.
+Creating model class IncGDLinearModel for class edu.utexas.cs.tamerProject.agents.mtamer.MoralTamerAgent.
+edu.utexas.cs.tamerProject.agents.mtamer.MoralTamerAgent masterLogSwitch: true
+Log base path: null
+agent.writeLogPath: null
+Reward log base path: null
+agent.writeRewPath: null
+selectionParams in ActionSelect: {epsilon=0.03, exhaustiveSearchDepth=1, greedyLeafPathLength=0, epsilonAnnealRate=0.9995, treeSearch=false, randomizeSearchDepth=true}
+
+----Agent edu.utexas.cs.tamerProject.agents.mtamer.MoralTamerAgent is being initialized.----
+Task specification string: VERSION RL-Glue-3.0 PROBLEMTYPE episodic DISCOUNTFACTOR 1.0 OBSERVATIONS INTS (200 0 1)  (0 1)  (0 7)  (0 4)  (0 9)  (0 19)  (20 20)  (10 10)  (0 3)  ACTIONS INTS (0 4)  REWARDS (0.0 8.0)  EXTRA EnvName:Tetris HEIGHT:20 WIDTH:10 Revision: null
+Environment name: Tetris
+params: ;log=edu.utexas.cs.tamerProject.logger.Log@4567d8b1;featClass=FeatGen_Tetris;featGenParams={basisFcnsPerDim=41, relWidth=0.062, biasFeatVal=0.1, numBinsPerDim=10};moralFeatClass=MoralFeatGen_Tetris;modelClass=IncGDLinearModel;initModelWSamples=false;initSampleValue=0.0;numBiasingSamples=0;biasSampleWt=0.1;initWtsValue=0.0;modelAddsBiasFeat=true;wekaModelName=;stepSize=1.0638297872340426E-7;traceType=replacing;traceDecayFactor=0.0;safeAction=null;selectionMethod=greedy;selectionParams={epsilon=0.03, exhaustiveSearchDepth=1, greedyLeafPathLength=0, epsilonAnnealRate=0.9995, treeSearch=false, randomizeSearchDepth=true};envTransModel=null;envRewModel=null;distClass=previousStep;creditDelay=0.2;windowSize=0.6;extrapolateFutureRew=false;delayWtedIndivRew=false;noUpdateWhenNoRew=false;hInflParams={}
+Creating feature generation class FeatGen_Tetris.
+Creating model class IncGDLinearModel for class edu.utexas.cs.tamerProject.agents.mtamer.MoralTamerAgent.
+edu.utexas.cs.tamerProject.agents.mtamer.MoralTamerAgent masterLogSwitch: true
+Log base path: null
+agent.writeLogPath: null
+Reward log base path: null
+agent.writeRewPath: null
+selectionParams in ActionSelect: {epsilon=0.03, exhaustiveSearchDepth=1, greedyLeafPathLength=0, epsilonAnnealRate=0.9995, treeSearch=false, randomizeSearchDepth=true}
+
+----Agent edu.utexas.cs.tamerProject.agents.rotation.RotationAgent is being initialized.----
+Task specification string: VERSION RL-Glue-3.0 PROBLEMTYPE episodic DISCOUNTFACTOR 1.0 OBSERVATIONS INTS (200 0 1)  (0 1)  (0 7)  (0 4)  (0 9)  (0 19)  (20 20)  (10 10)  (0 3)  ACTIONS INTS (0 4)  REWARDS (0.0 8.0)  EXTRA EnvName:Tetris HEIGHT:20 WIDTH:10 Revision: null
+Environment name: Tetris
+params: ;log=edu.utexas.cs.tamerProject.logger.Log@4567d8b1;featClass=None;featGenParams={basisFcnsPerDim=41, relWidth=0.062, biasFeatVal=0.1, numBinsPerDim=10};moralFeatClass=None;modelClass=None;initModelWSamples=false;initSampleValue=0.0;numBiasingSamples=0;biasSampleWt=0.5;initWtsValue=0.0;modelAddsBiasFeat=false;wekaModelName=;stepSize=0.05;traceType=replacing;traceDecayFactor=0.0;safeAction=null;selectionMethod=e-greedy;selectionParams={epsilon=0.03, exhaustiveSearchDepth=1, greedyLeafPathLength=0, epsilonAnnealRate=0.9995, treeSearch=false, randomizeSearchDepth=true};envTransModel=null;envRewModel=null;distClass=uniform;creditDelay=0.2;windowSize=0.6;extrapolateFutureRew=true;delayWtedIndivRew=false;noUpdateWhenNoRew=false;hInflParams={}
+Creating feature generation class None.
+Nov 09, 2018 9:21:25 PM edu.utexas.cs.tamerProject.agents.GeneralAgent getFeatGen
+WARNING: The current code doesn't support class None for feature generation. Adding support might be trivial. Adjust GeneralAgent.log for more.
+Creating model class None for class edu.utexas.cs.tamerProject.agents.rotation.RotationAgent.
+Nov 09, 2018 9:21:25 PM edu.utexas.cs.tamerProject.agents.GeneralAgent setModel
+WARNING: The current code doesn't support class None for modeling. Adding support might be trivial. Adjust GeneralAgent.log for more.
+edu.utexas.cs.tamerProject.agents.rotation.RotationAgent masterLogSwitch: true
+Log base path: null
+agent.writeLogPath: null
+Reward log base path: null
+agent.writeRewPath: null
+args in adjust: []
+---Starting training session.---
+---Starting training session.---
+in training in TetrisTamerMultiExpHelper? true
+TamerApplet.startTask()
+Agent episode 1 reward: 1.000000
+Agent episode 1 reward: 0.000000
+.Episode 1 finished. 	 Steps: 386
+Agent episode 2 reward: 30.000000
+Agent episode 2 reward: 58.000000
+.Episode 2 finished. 	 Steps: 3569
+Agent episode 3 reward: 56.000000
+Agent episode 3 reward: 48.000000
+.Episode 3 finished. 	 Steps: 4192
+Agent episode 4 reward: 70.000000
+Agent episode 4 reward: 77.000000
+.Episode 4 finished. 	 Steps: 6146
+Agent episode 5 reward: 956.000000
+Agent episode 5 reward: 966.000000
+.Episode 5 finished. 	 Steps: 76428
+Agent episode 6 reward: 519.000000
+Agent episode 6 reward: 534.000000
+.Episode 6 finished. 	 Steps: 42441
+Agent episode 7 reward: 1318.000000
+Agent episode 7 reward: 1289.000000
+.Episode 7 finished. 	 Steps: 103100
+Agent episode 8 reward: 1345.000000
+Agent episode 8 reward: 1301.000000
+.Episode 8 finished. 	 Steps: 106573
+Agent episode 9 reward: 796.000000
+Agent episode 9 reward: 771.000000
+.Episode 9 finished. 	 Steps: 64142
+Agent episode 10 reward: 552.000000
+Agent episode 10 reward: 559.000000
+.Episode 10 finished. 	 Steps: 45651
+Experiment finished. Killing here in run local exp
+Cleaning up RotationAgent.
+
+-----------------------------------------------
+
+Number of episodes: 10
+Average number of steps per episode: 45262.8
+Average return per episode: 1124.6
+-----------------------------------------------
+
+TamerApplet noticed that the experiment is finished
+PostExpPanel init()
