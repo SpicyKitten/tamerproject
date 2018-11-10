@@ -317,7 +317,7 @@ public class ActionSelect{
 		log.log(Level.FINER,"Moral greedy has "+moralValueMap.size()+" moral actions to choose from");
 		if (moralValueMap.size() == 0) {
 			System.err.println("Defaulting to greedyActSelect");
-			return greedyActSelect(valFcnModel, obs, lastAct);
+			moralValueMap.putAll(valueMap);
 //			System.err.println("A list of zero moral maximum acts was returned by RegressionModel.getMaxActs(). Exiting.");
 //			System.err.println("state-action values: " + Arrays.toString(valFcnModel.getStateActOutputs(obs, 
 //																		valFcnModel.getFeatGen().getPossActions(obs))));

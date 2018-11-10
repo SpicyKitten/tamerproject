@@ -171,7 +171,7 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 	
 	public Action agent_step(double r, Observation o, double startTime, Action predeterminedAct, Action tieBreakAction) 
 	{
-		log.log(Level.INFO,"\n----------------MTamer step---------------");
+		log.log(Level.FINER,"\n----------------MTamer step---------------");
     	log.log(Level.FINER,"\n");
 //    	log.log(Level.FINE,"MTAMER obs: " + Arrays.toString(o.intArray));
     	if (verifyObsFitsEnvDesc)

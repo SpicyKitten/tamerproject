@@ -131,7 +131,7 @@ public class PerceptronModel extends RegressionModel implements Cloneable
 		{
 			summation += feats[i] * weights[i + 1]; 
 		}
-		return (summation < 0) ? firstLabel : secondLabel;
+		return (summation <= 0) ? firstLabel : secondLabel;
 	}
 
 	@Override
