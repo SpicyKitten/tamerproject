@@ -230,6 +230,7 @@ public class RunLocalExperiment extends Observable{
 			StringBuilder sb = new StringBuilder(".");
 			sb.append("Episode " + epNum + " finished. ");
 			sb.append("\t Steps: "+ glue.getTimeStep());
+			sb.append("\t Reward: "+ glue.getReturnThisEpisode());
 			log.log(Level.INFO,sb.toString());
 			rlNumSteps[epNum - 1] = glue.getTimeStep();
 			rlReturn[epNum - 1] = glue.getReturnThisEpisode();

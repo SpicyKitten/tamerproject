@@ -21,6 +21,7 @@ http://brian.tannerpages.com
 
 import java.util.Random;
 import java.util.Vector;
+import java.util.function.Predicate;
 
 import org.rlcommunity.rlglue.codec.types.Observation;
 
@@ -32,6 +33,9 @@ public class TetrisState {
     static final int CCW = 3; /*Action value for a counter clockwise rotation*/
     static final int NONE = 4; /*The no-action Action*/
     static final int FALL = 5; /* fall down */
+    static final Predicate<TetrisState> terminationCondition = 
+//    		(s) -> false;
+    		(s) -> s.get_score() > 100;
 
     static final int numBlockTypes = 7; //bdg
     public int [] previousBlock = null; // first four cells are indices of cells, fifth is reinforcement accumulated for the block's action
@@ -471,7 +475,7 @@ public class TetrisState {
             hitOnWayIn = collidingCheckOnlySpotsInBounds(currentX, currentY, currentRotation);
             currentY++;
         }
-        is_game_over = colliding(currentX, currentY, currentRotation) || hitOnWayIn;
+        is_game_over = colliding(currentX, currentY, currentRotation) || hitOnWayIn || terminationCondition.test(this);
         if (is_game_over) {
             previousBlock = null;
             secToLastBlock = null;

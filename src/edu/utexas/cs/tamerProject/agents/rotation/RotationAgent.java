@@ -43,8 +43,9 @@ public class RotationAgent extends GeneralAgent implements AgentInterface, Itera
 	private boolean fixed_rotation = false;
 	public double default_reward = 0.0;
 	
-	private static final char[] charCodes = {
-		' '
+	private static final Character[] charCodes = {
+		' ',
+		'S'
 	};
 	private static final Log log = new Log(//edit these values as desired (class, Level, less trace information)
 			RotationAgent.class, Level.OFF, Log.Simplicity.HIGH);//basic logging functionality
@@ -81,10 +82,8 @@ public class RotationAgent extends GeneralAgent implements AgentInterface, Itera
 	public RotationAgent(ParameterHolder p, GeneralAgent... agents)
 	{
 		rotation = new ArrayList<GeneralAgent>();
-		for(GeneralAgent generalAgent : agents)
-		{
-			rotation.add(generalAgent);
-		}
+		if(!add_agents(agents))
+			throw new IllegalStateException("Agents in rotation cannot be null!");
 		activated_agents = new BitSet();
 	}
 	
@@ -371,11 +370,7 @@ public class RotationAgent extends GeneralAgent implements AgentInterface, Itera
 	{
 		if(!fixed_rotation || agent_index < 0)
 			return;
-		boolean allAgentCharCode = false;
-		for(char code : RotationAgent.charCodes)
-			if(c == code)
-				allAgentCharCode = true;
-		if(!allAgentCharCode)
+		if(!List.of(RotationAgent.charCodes).stream().anyMatch(code -> c == code))
 			rotation.get(agent_index).receiveKeyInput(c);
 		else
 			rotation.forEach(agent -> agent.receiveKeyInput(c));

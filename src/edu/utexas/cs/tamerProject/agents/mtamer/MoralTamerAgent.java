@@ -30,6 +30,7 @@ import edu.utexas.cs.tamerProject.featGen.FeatGenerator;
 import edu.utexas.cs.tamerProject.featGen.moral.MoralFeatGen_Tetris;
 import edu.utexas.cs.tamerProject.logger.Log;
 import edu.utexas.cs.tamerProject.modeling.IncBatchPerceptronModel;
+import edu.utexas.cs.tamerProject.modeling.IncGDLinearModel;
 import edu.utexas.cs.tamerProject.modeling.SampleWithObsAct;
 import edu.utexas.cs.tamerProject.modeling.templates.RegressionModel;
 import edu.utexas.cs.tamerProject.trainInterface.TrainerListener;
@@ -49,18 +50,30 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 	public ArrayList<HRew> mRewThisStep;
 	public HumanProxy m_proxy;
 	public HumanProxy v_proxy;
+	private boolean v_proxy_enabled = false;
 	public FeatGenerator moralFeatGen;
 	public Consumer<Double> alternativeMoralPipe = null;
 	
 	private static final Log log = new Log(//edit these values as desired (class, Level, less trace information)
 			MoralTamerAgent.class, Level.OFF, Log.Simplicity.HIGH);//basic logging functionality
 	
+	/**
+	 * Enable value proxy if not using human feedback
+	 * @param usingHumanFeedback
+	 */
+	public MoralTamerAgent(boolean usingHumanFeedback)
+	{
+		super();
+		this.v_proxy_enabled = !usingHumanFeedback;
+		System.out.println(this.v_proxy_enabled);
+	}
+	
 	public void agent_init(String taskSpec)
 	{
 		GeneralAgent.agent_init(taskSpec, this);
 		this.setMoralFeatGen(param("moralFeatClass"));
 		//// CREATE CreditAssignParamVec
-		CreditAssignParamVec credAssignParams = new CreditAssignParamVec("immediate", this.params.creditDelay,
+		CreditAssignParamVec credAssignParams = new CreditAssignParamVec(v_proxy_enabled ? "immediate" : "previousStep", this.params.creditDelay,
 				this.params.windowSize, this.params.extrapolateFutureRew, this.params.delayWtedIndivRew,
 				this.params.noUpdateWhenNoRew);
 		//// INITIALIZE TAMER
@@ -218,7 +231,9 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 		if(moralRewards != null) log.log(Level.FINE,String.format("MPredict: [%f]", moralRewards.get(this.currObsAndAct.getAct())));
 		double feedback = this.m_proxy.notify(this, o, this.currObsAndAct.getAct());
 		double efficiency = 0;
-//		if(this.v_proxy != null)
+		if(!this.v_proxy_enabled && this.v_proxy != null)
+			throw new IllegalStateException("Value proxy enabled despite not intending to have it enabled!");
+		if(this.v_proxy != null)
 			efficiency = this.v_proxy.notify(this, o, this.currObsAndAct.getAct());
 		Map<String, Object> params = new HashMap<>();
 		params.put("episode reward", r);
@@ -233,6 +248,8 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 	{
 		this.mRewThisStep = getMoralFeedbackThisStep();
 		super.agent_end(r, time);
+		System.out.println(String.format("Weights at end of episode %d: %s", 
+    			this.currEpNum, Arrays.toString(((IncGDLinearModel)this.model).getWeights())));
 	}
 	
 	/**
@@ -275,6 +292,11 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 			return;
 		if((c == 'x' || c == 'X' || c == '.' || c == '>') && this.m_proxy != null)
 			return;
+		if(c == 'S')
+		{
+			System.out.println("Weights: "+Arrays.toString(((IncGDLinearModel)this.model).getWeights()));
+			return;
+		}
 		super.receiveKeyInput(c);
 		if(c == 'x' || c == 'X')
 			this.addMRew(Feedback.IMMORAL);//x for immoral
@@ -341,7 +363,14 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 		case MORAL:
 			this.m_proxy = proxy; break;
 		case VALUE:
-			this.v_proxy = proxy; break;
+			switch(Boolean.toString(this.v_proxy_enabled))
+			{
+			case "true":
+				this.v_proxy = proxy; break;
+			default://set nothing if it's not enabled
+				break;
+			}
+			break;
 		}
 	}
 }

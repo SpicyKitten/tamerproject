@@ -409,7 +409,7 @@ public class CreditAssign{
 		//// time step isn't counted for whether to throw the sample out.
 		
 		this.inTrainSess = newInTrainSess;
-		println("\n\n\n\n\n\n\n\nIn training session: " + this.inTrainSess + "\n\n\n");
+		println("In training session: " + this.inTrainSess + "");
 	}
 	
 
