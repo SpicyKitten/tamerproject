@@ -29,7 +29,7 @@ public class ValueProxy implements HumanProxy
 		assert !(generalAgent instanceof RotationAgent) : "Tried to do single agent proxy for multi-agent!";
 		evalFunction = evaluator;
 		transitionFunction = mapping;
-		((MoralAgent)generalAgent).setProxy(this, ProxyType.VALUE);
+		((MoralAgent)generalAgent).setProxy(this);
 		myAgent = generalAgent;
 	}
 
@@ -51,6 +51,11 @@ public class ValueProxy implements HumanProxy
 		//reverse notify!
 		((TamerAgent)moralAgent).addHRew(feedbackVal);
 		return feedbackVal;
+	}
+
+	@Override
+	public ProxyType getProxyType() {
+		return ProxyType.VALUE;
 	}
 	
 }

@@ -22,6 +22,7 @@ import edu.utexas.cs.tamerProject.agents.GeneralAgent;
 import edu.utexas.cs.tamerProject.agents.HLearner;
 import edu.utexas.cs.tamerProject.agents.mtamer.moral.MoralAgent;
 import edu.utexas.cs.tamerProject.agents.mtamer.proxy.HumanProxy;
+import edu.utexas.cs.tamerProject.agents.mtamer.proxy.MoralProxy;
 import edu.utexas.cs.tamerProject.agents.mtamer.proxy.ProxyType;
 import edu.utexas.cs.tamerProject.agents.mtamer.trackable.TableTrackable;
 import edu.utexas.cs.tamerProject.agents.tamer.HRew;
@@ -53,6 +54,10 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 	private boolean v_proxy_enabled = false;
 	public FeatGenerator moralFeatGen;
 	public Consumer<Double> alternativeMoralPipe = null;
+	public boolean fixed_weights = false;
+	public boolean perfectly_moral = false;
+	public double[] efficiency_weights = null;
+	public double[] morality_weights = null;
 	
 	private static final Log log = new Log(//edit these values as desired (class, Level, less trace information)
 			MoralTamerAgent.class, Level.OFF, Log.Simplicity.HIGH);//basic logging functionality
@@ -71,9 +76,14 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 	public void agent_init(String taskSpec)
 	{
 		GeneralAgent.agent_init(taskSpec, this);
+		if(this.fixed_weights)//the meaning of weights not being null at init is that we are using a fixed set of weights
+		{
+			((IncGDLinearModel)this.model).setWeights(this.efficiency_weights);
+			this.v_proxy_enabled = false;
+		}
 		this.setMoralFeatGen(param("moralFeatClass"));
 		//// CREATE CreditAssignParamVec
-		CreditAssignParamVec credAssignParams = new CreditAssignParamVec(v_proxy_enabled ? "immediate" : "previousStep", this.params.creditDelay,
+		CreditAssignParamVec credAssignParams = new CreditAssignParamVec(this.v_proxy_enabled ? "immediate" : "previousStep", this.params.creditDelay,
 				this.params.windowSize, this.params.extrapolateFutureRew, this.params.delayWtedIndivRew,
 				this.params.noUpdateWhenNoRew);
 		//// INITIALIZE TAMER
@@ -84,6 +94,8 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 		this.mLearner = new HLearner(this.makeMoralModel(), credAssignParams);
 		//assuming feedback works in the same way for morality and score under the TAMER model
 		//and that credAssignParams aren't changed in the HLearner class (which they aren't for now?)
+		if(this.fixed_weights)
+			((IncBatchPerceptronModel)this.mLearner.getModel()).setWeights(this.morality_weights);
 		
 		//System.out.println(this.params.selectionMethod +"\r" +this.params.selectionParams.toString() );
 		this.actSelector = new ActionSelect(this.model, this.params.selectionMethod, 
@@ -101,6 +113,7 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 		if (this.actSelector.getRewModel() == null)
 			this.actSelector.setRewModel(this.model);
 		this.endInitHelper();
+		System.out.println("Set weights: "+Arrays.toString(((IncGDLinearModel)this.model).getWeights()));
 	}
 	
 	public void setMoralFeatGen(String featGen)
@@ -124,7 +137,7 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 		RegressionModel model = null;
 		log.log(Level.FINER,""+this.moralFeatGen.getNumFeatures());
 		model = new IncBatchPerceptronModel(1000, this.moralFeatGen.getNumFeatures(), 
-		0.5 / 14.0, this.moralFeatGen, 1, 0);
+		0.008 / 14.0, this.moralFeatGen, 1, 0);
 //		model = new PerceptronModel(this.moralFeatGen.getNumFeatures(), 
 //				0.5 / 14.0, this.moralFeatGen, 1, 0);
 //		model = new IncGDLinearModel(this.moralFeatGen.getNumFeatures(), 
@@ -147,18 +160,28 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 	
 	protected SampleWithObsAct[] handlePrevSamples(double currTime, boolean inTrainSess)
 	{
-		SampleWithObsAct[] ret = this.hLearner.processSamples(currTime, inTrainSess);
-		this.mLearner.processSamples(currTime, inTrainSess);
+		SampleWithObsAct[] ret = new SampleWithObsAct[0];
+		if(!this.fixed_weights)
+		{
+			ret = this.hLearner.processSamples(currTime, inTrainSess);
+			this.mLearner.processSamples(currTime, inTrainSess);
+		}
 		return ret;
 	}
 	
 	protected void processPrevTimeStep(double borderTime)
 	{
-		super.processPrevTimeStep(borderTime);
-		if(this.inTrainSess)
+		//unlike mLearner, we can set fixed weights for the hLearner,
+		//in which case we don't need to update the weights
+		if (this.inTrainSess && !this.fixed_weights) 
+			this.hLearner.processHRew(this.hRewThisStep);
+		if(this.inTrainSess && !this.fixed_weights)
 			this.mLearner.processHRew(mRewThisStep);
 		if(this.verbose)
+		{
+			System.out.println("hRewThisStep: " + this.hRewThisStep.toString());
 			System.out.println("mRewThisStep: " + mRewThisStep);
+		}
 	}
 	
 	public void updateHistory(Map<String, Object> params)
@@ -233,7 +256,7 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 		double efficiency = 0;
 		if(!this.v_proxy_enabled && this.v_proxy != null)
 			throw new IllegalStateException("Value proxy enabled despite not intending to have it enabled!");
-		if(this.v_proxy != null)
+		if(this.v_proxy_enabled)
 			efficiency = this.v_proxy.notify(this, o, this.currObsAndAct.getAct());
 		Map<String, Object> params = new HashMap<>();
 		params.put("episode reward", r);
@@ -248,8 +271,19 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 	{
 		this.mRewThisStep = getMoralFeedbackThisStep();
 		super.agent_end(r, time);
-		System.out.println(String.format("Weights at end of episode %d: %s", 
-    			this.currEpNum, Arrays.toString(((IncGDLinearModel)this.model).getWeights())));
+		Map<String, Object> params = new HashMap<>();
+		params.put("episode reward", r);
+		params.put("episode feedback", 0);
+		params.put("moral rewards", null);
+		params.put("moral feedback", this.moralFeedbackValue());
+		this.updateHistory(params);
+		double[] endWeights = ((IncGDLinearModel)this.model).getWeights().clone();
+		for(int i = 0; i < endWeights.length; ++i)
+			endWeights[i] *= 1000;
+		System.out.println(String.format("Eff. Weights at end of episode %d: %s", 
+    			this.currEpNum, Arrays.toString(endWeights)));
+		System.out.println(String.format("Soc. Weights at end of episode %d: %s", 
+    			this.currEpNum, Arrays.toString(((IncBatchPerceptronModel)this.mLearner.getModel()).getWeights())));
 	}
 	
 	/**
@@ -265,6 +299,9 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 	//technically inherited, now, but leaving it here for tracing purposes in future
 	public void addMRew(double feedbackVal)
 	{
+		//if we don't want to update weights, we should avoid using moral rewards as feedback
+		if(!this.v_proxy_enabled)
+			return;
 		if(alternativeMoralPipe != null)
 		{
 			alternativeMoralPipe.accept(feedbackVal);
@@ -311,7 +348,18 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 	{
 		Map<Action, Double> actionRewards = new HashMap<Action, Double>();
 		ArrayList<Action> actions = this.moralFeatGen.getPossActions(o);
-		double[] vals = m.getStateActOutputs(o, actions);
+		double[] vals = null;
+		if(this.perfectly_moral)
+		{
+			boolean[] moralities = ((MoralProxy)this.m_proxy).evaluate(this, o, actions.toArray(new Action[actions.size()]));
+			vals = new double[moralities.length];
+			for(int i = 0; i < moralities.length; ++i)
+			{
+				vals[i] = moralities[i] ? this.moralFeedbackValue() : this.immoralFeedbackValue();
+			}
+		}
+		else
+			vals = m.getStateActOutputs(o, actions);
 		for(int i = 0; i < actions.size(); ++i)
 		{
 			actionRewards.put(actions.get(i), vals[i]);
@@ -326,6 +374,17 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 	protected Map<Action, Boolean> getActionMoralities(Observation o, double threshold)
 	{
 		assert threshold > 0.0 && threshold < 1.0 : "Threshold of action moralities isn't within (0,1)!";
+		if(perfectly_moral)//use moral proxy as a substitute for moral model
+		{
+			ArrayList<Action> actions = this.moralFeatGen.getPossActions(o);
+			boolean[] moralities = ((MoralProxy)this.m_proxy).evaluate(this, o, actions.toArray(new Action[actions.size()]));
+			Map<Action, Boolean> actionMoralities = new HashMap<Action, Boolean>();
+			for(int act = 0; act < actions.size(); ++act) 
+			{
+				actionMoralities.put(actions.get(act), moralities[act]);
+			}
+			return actionMoralities;
+		}
 		Map<Action, Boolean> actionMoralities = new HashMap<Action, Boolean>();
 		Map<Action, Double> moralRewards = this.getActionRewards(this.mLearner.getModel(), o);
 		double immoral = Feedback.IMMORAL;
@@ -356,9 +415,9 @@ public class MoralTamerAgent extends TamerAgent implements MoralAgent, TableTrac
 	}
 
 	@Override
-	public void setProxy(HumanProxy proxy, ProxyType type)
+	public void setProxy(HumanProxy proxy)
 	{
-		switch(type)
+		switch(proxy.getProxyType())
 		{
 		case MORAL:
 			this.m_proxy = proxy; break;

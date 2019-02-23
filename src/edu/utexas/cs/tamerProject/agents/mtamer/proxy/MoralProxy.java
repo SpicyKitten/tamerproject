@@ -37,7 +37,7 @@ public class MoralProxy implements HumanProxy
 		evaluators.forEach(evalFunctions::add);
 		assert evalFunctions.size() == 1 : "Incorrect number of evaluation functions provided!";
 		transitionFunction = mapping;
-		((MoralAgent)generalAgent).setProxy(this, ProxyType.MORAL);
+		((MoralAgent)generalAgent).setProxy(this);
 		myAgents = new ArrayList<>();
 		myAgents.add(generalAgent);
 		agent_index = 0;
@@ -64,7 +64,7 @@ public class MoralProxy implements HumanProxy
 		assert evalFunctions.size() == agents.size() : "Incorrect number of evaluation functions provided!";
 		transitionFunction = mapping;
 		for(GeneralAgent generalAgent : agents)
-			((MoralAgent)generalAgent).setProxy(this, ProxyType.MORAL);
+			((MoralAgent)generalAgent).setProxy(this);
 		myAgents = new ArrayList<>(agents);
 		agent_index = 0;
 	}
@@ -96,7 +96,7 @@ public class MoralProxy implements HumanProxy
 		for(int eval_index = 0; eval_index < myAgents.size(); ++eval_index)
 		{
 			//each evalFunction gives a change in evaluations between initial and terminal states of a step
-			agent_evals[eval_index] = getEval(eval_index).apply(initial, terminal);;
+			agent_evals[eval_index] = getEval(eval_index).apply(initial, terminal);
 		}
 		int eval_index = this.getIndex(moralAgent);
 		assert eval_index != -1 : "notify() sourced in a moral agent unknown to the current human proxy!";
@@ -113,6 +113,38 @@ public class MoralProxy implements HumanProxy
 			moralAgent.addMRew(moralAgent.immoralFeedbackValue());
 			return moralAgent.immoralFeedbackValue();
 		}
+	}
+	
+	/**
+	 * Evaluate the given (o, act) -> o' transitions according to the moral filter
+	 * @param moralAgent The agent requesting feedback (should be in <b>myAgents</b>)
+	 * @param o The observation corresponding to the initial state of the problem
+	 * @param acts The actions that are going to be applied to the initial state
+	 * @return Whether the state transition caused by each act in <b>acts</b> is 
+	 * considered to be morally permissible transition according to this proxy's 
+	 * moral filter
+	 */
+	public boolean[] evaluate(MoralAgent moralAgent, Observation o, Action... acts)
+	{
+		if(acts.length == 0)
+			return new boolean[0];
+		assert moralAgent instanceof GeneralAgent : "notify() sourced in a moral agent using an unusual superclass!";
+		int evaluator_index = this.getIndex(moralAgent);//only need to check once since unchanging over the set of moves - if this invariant doesn't hold, make a new method
+		assert evaluator_index != -1 : "notify() sourced in a moral agent unknown to the current human proxy!";
+		boolean[] evaluations = new boolean[acts.length];
+		double[] agent_evals = new double[myAgents.size()];
+		for(int act = 0; act < acts.length; ++act)
+		{
+			Observation terminal = transitionFunction.apply(o, acts[act]);
+			for(int eval_index = 0; eval_index < myAgents.size(); ++eval_index)
+			{
+				//each evalFunction gives a change in evaluations between initial and terminal states of a step
+				agent_evals[eval_index] = getEval(eval_index).apply(o, terminal);
+			}
+			double feedbackVal = moralFilter.apply(agent_evals, evaluator_index);
+			evaluations[act] = (feedbackVal >= 0);
+		}
+		return evaluations;
 	}
 	
 	private BiFunction<Observation, Observation, Double> getEval(int i)
@@ -247,5 +279,10 @@ public class MoralProxy implements HumanProxy
 			System.out.println();
 		}
 		System.out.println();
+	}
+
+	@Override
+	public ProxyType getProxyType() {
+		return ProxyType.MORAL;
 	}
 }

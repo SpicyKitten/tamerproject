@@ -61,7 +61,7 @@ public class TetrisTamerMultiExp extends TamerApplet{
 	
 	public void initPanel() {
 		Map<String, Settings> settings = new LinkedHashMap<>();
-		double alpha = 0.05;
+		double alpha = 0.006;//global 0.06 relative 0.06 fixed 0.006 simple 0.06
 		/*short 0*/settings.put("efficiencyMoralParallel fixed", new Settings("false",0,"false"));
 		/*y 1*/settings.put("efficiencyMoralParallel global", new Settings("false",0,"false"));
 		/*y 2*/settings.put("efficiencyMoralParallel relative", new Settings("false",0,"false"));
@@ -79,12 +79,13 @@ public class TetrisTamerMultiExp extends TamerApplet{
 		/*y14*/settings.put("moralityOnly relative", new Settings("false",0,"false"));
 		/*y15*/settings.put("moralityOnly simple", new Settings("false",0,"false"));
 		Object[] dirs = settings.keySet().toArray();
-		int seedIndex = 0;
+		int seedIndex = 2;
+		boolean isLearning = true;//given using moral, true = no baseline, false = baseline
 		boolean humanTraining = false;
-		boolean isGeneral = false;
-		String s = (String)dirs[3];//set to null unless it's a setting you're going to use 100%
+		boolean isGeneral = true;
+		String s = (String)dirs[9];//set to null unless it's a setting you're going to use 100%
 		Settings mySettings = settings.get(s);
-		System.out.println("Setting: " + s);
+		System.out.println("Setting: " + s + (isLearning?" learning":" baseline"));
 		/*
 		 * Init experiment class
 		 */
@@ -115,18 +116,21 @@ public class TetrisTamerMultiExp extends TamerApplet{
 //		String filter = new String[]{"fixed","global","relative","simple"}[0];
 		String filter = s.replaceAll(".* ", "");
 		String generalString = isGeneral ? "general" : "specialized";
-		//path to target directory (example is C:\Users\user\git\tamerproject\records\)
-		file = Paths.get("/Users","user","git","tamerproject","records", s.replaceAll(" .*", ""), generalString, s.replace(" ","_")+"_"+generalString+".csv").toFile();
+		String baselineString = isLearning ? "learning" : "baseline";
+		//path to target directory (example is C:\Users\\user\\git\\tamerproject\\records\)
+		file = Paths.get("/Users","user","git","tamerproject","records", s.replaceAll(" .*", ""), baselineString, s.replace(" ","_")+"_"+generalString+"_"+baselineString+".csv").toFile();
 //		String meld = new String[]{"false","true"}[1];//-0.08516973786720164
 		String meld = mySettings.meld();
 		String negativeValue = mySettings.negativeValue();
 		String positiveValue = mySettings.positiveValue();
 		String pipe = mySettings.pipe();
 		String humanTrainingEnabled = Boolean.toString(humanTraining);
+		String learningEnabled = Boolean.toString(isLearning);
 		//DONE: implement piping moral rewards into efficiency channel (yikes)
 		String[] args = new String[] { "-moral", moral,
 				"-filter", filter, "-meld", meld, negativeValue, positiveValue,
-				"-pipe", pipe, negativeValue, positiveValue, "-human", humanTrainingEnabled};
+				"-pipe", pipe, negativeValue, positiveValue, "-human", humanTrainingEnabled,
+				"-learning", learningEnabled};
 		agent = exp.createAgent(args, env);
 
 		/*
@@ -140,7 +144,7 @@ public class TetrisTamerMultiExp extends TamerApplet{
 		/*
 		 * Set experimental parameters
 		 */
-		RunLocalExperiment.stepDurInMilliSecs = 100;
+		RunLocalExperiment.stepDurInMilliSecs = 10;
 		RunLocalExperiment.numEpisodes = humanTraining ? 50 : 10;
 		RLPanel.DISPLAY_SECONDS_FOR_TIME = true;
 		RLPanel.DISPLAY_REW_THIS_EP = true;

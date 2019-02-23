@@ -164,10 +164,10 @@ public class ExtActionAgentWrap extends GeneralAgent implements ExtActionWrapper
     
     public void agent_end(double r, double time) {
     	this.rewThisExtAct += r;
+//    	System.out.println(this.coreAgent.currEpNum + ": " + this.coreAgent.rewThisEp);
+    	this.coreAgent.agent_end(this.rewThisExtAct, time);
     	System.out.println(String.format("Agent episode %d reward: %f", 
     			this.coreAgent.currEpNum, this.coreAgent.rewThisEp));
-//    	System.out.println(this.coreAgent.currEpNum + ": " + this.coreAgent.rewThisEp);
-    	this.coreAgent.agent_end(r, time);
     }
     
     public void agent_cleanup() {}

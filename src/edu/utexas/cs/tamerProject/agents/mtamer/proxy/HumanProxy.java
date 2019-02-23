@@ -15,4 +15,6 @@ public interface HumanProxy
 	 * @return The feedback calculated by the proxy
 	 */
 	double notify(MoralAgent moralAgent, Observation o, Action act);
+	
+	ProxyType getProxyType();
 }

@@ -29,5 +29,5 @@ public interface MoralAgent
 	public abstract ArrayList<HRew> getNRewList(String name);
 	public abstract double moralFeedbackValue();
 	public abstract double immoralFeedbackValue();
-	public abstract void setProxy(HumanProxy proxy, ProxyType type);
+	public abstract void setProxy(HumanProxy proxy);
 }

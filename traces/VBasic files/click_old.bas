@@ -1,12 +1,4 @@
-VERSION 1.0 CLASS
-BEGIN
-  MultiUse = -1  'True
-END
-Attribute VB_Name = "Sheet1"
-Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
-Attribute VB_PredeclaredId = True
-Attribute VB_Exposed = True
+Attribute VB_Name = "Module1"
 Private Sub CommandButton1_Click()
 Dim LastRow As Long
 Dim StartCell As Range
@@ -117,5 +109,6 @@ Cells(numRows + 1, 18).Value = "End"
 Cells(1, 17).Value = "Proportion Correct"
 Cells(1, 19).Value = "Cumulative Reward"
 End Sub
+
 
 

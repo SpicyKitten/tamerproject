@@ -70,4 +70,13 @@ public class IncBatchPerceptronModel extends PerceptronModel
 		this.samples.clear();
 	}
 
+	public double[] getWeights()
+	{
+		return this.weights;
+	}
+	
+	public void setWeights(double[] wts)
+	{
+		this.weights = wts.clone();
+	}
 }
