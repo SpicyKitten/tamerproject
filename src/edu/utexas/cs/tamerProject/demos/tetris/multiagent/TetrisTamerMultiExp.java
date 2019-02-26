@@ -79,7 +79,7 @@ public class TetrisTamerMultiExp extends TamerApplet{
 		/*y14*/settings.put("moralityOnly relative", new Settings("false",0,"false"));
 		/*y15*/settings.put("moralityOnly simple", new Settings("false",0,"false"));
 		Object[] dirs = settings.keySet().toArray();
-		int seedIndex = 2;
+		int seedIndex = 0;
 		boolean isLearning = true;//given using moral, true = no baseline, false = baseline
 		boolean humanTraining = false;
 		boolean isGeneral = true;
